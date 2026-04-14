@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+             (
+               (request.auth.token.get('email', '').lower() == "njeirheinard21@gmail.com") || 
+               (request.auth.token.get('email', '').lower() == "obenmaxjr@gmail.com") ||
+               (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+             );
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.size() < 100 && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             data.role in ['user', 'admin'] &&
+             (!('phoneNumber' in data) || (data.phoneNumber is string && data.phoneNumber.size() < 20));
+    }
+
+    function isValidSubscription(data) {
+      return data.keys().hasAll(['userId', 'planType', 'status', 'createdAt']) &&
+             data.userId is string && data.userId.size() < 128 &&
+             data.planType in ['monthly', 'yearly'] &&
+             data.status in ['pending', 'active', 'expired', 'key_generated'] &&
+             (!('name' in data) || (data.name is string && data.name.size() < 100)) &&
+             (!('email' in data) || (data.email is string && data.email.size() < 100)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20));
+    }
+
+    function isValidActivationKey(data) {
+      return data.keys().hasAll(['key', 'status', 'expiresAt']) &&
+             data.key is string && data.key.size() < 50 &&
+             data.status in ['unused', 'used'] &&
+             data.expiresAt is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin()) && isValidSubscription(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidSubscription(request.resource.data);
+      allow delete: if isAuthenticated() && (request.auth.token.get('email', '').lower() == "njeirheinard21@gmail.com" || isAdmin());
+    }
+
+    match /activationKeys/{keyId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAdmin() && isValidActivationKey(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidActivationKey(request.resource.data);
+      allow delete: if isAuthenticated() && (request.auth.token.get('email', '').lower() == "njeirheinard21@gmail.com" || isAdmin());
+    }
+
+    match /liveStream/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

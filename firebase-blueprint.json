@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "Full name" },
+        "email": { "type": "string", "format": "email" },
+        "phoneNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "User subscription details",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "planType": { "type": "string", "enum": ["monthly", "yearly"] },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "active", "expired", "key_generated"] },
+        "paymentMethod": { "type": "string", "enum": ["momo", "om"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "expiryDate": { "type": "string", "format": "date-time" },
+        "subscriptionKey": { "type": "string" }
+      },
+      "required": ["userId", "planType", "status", "createdAt"]
+    },
+    "ActivationKey": {
+      "title": "ActivationKey",
+      "description": "One-time use activation keys",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "plan": { "type": "string" },
+        "durationDays": { "type": "number" },
+        "key": { "type": "string" },
+        "status": { "type": "string", "enum": ["unused", "used"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["key", "status", "expiresAt"]
+    },
+    "LiveStream": {
+      "title": "LiveStream",
+      "description": "Live stream configuration and status",
+      "type": "object",
+      "properties": {
+        "isLive": { "type": "boolean" },
+        "streamUrl": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "visibility": { "type": "string", "enum": ["public", "subscribers"] },
+        "chatEnabled": { "type": "boolean" },
+        "thumbnailUrl": { "type": "string" }
+      },
+      "required": ["isLive", "streamUrl"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile documents"
+    },
+    "/subscriptions/{subId}": {
+      "schema": { "$ref": "#/entities/Subscription" },
+      "description": "Subscription tracking documents"
+    },
+    "/activationKeys/{keyId}": {
+      "schema": { "$ref": "#/entities/ActivationKey" },
+      "description": "Activation key documents"
+    },
+    "/liveStream/current": {
+      "schema": { "$ref": "#/entities/LiveStream" },
+      "description": "Current live stream status and config"
+    }
+  }
+}

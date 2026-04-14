@@ -1,0 +1,5 @@
+{
+  "name": "Optimal Healthcare Admin & Seminar Portal",
+  "description": "A secure healthcare platform featuring automated subscription management, searchable client records, manual status overrides, activation key generation, and restricted live seminar access.",
+  "requestFramePermissions": []
+}
