@@ -12,7 +12,7 @@ export interface User {
 export interface Subscription {
   userId: string;
   status: 'active' | 'expired' | 'none';
-  planType: 'monthly' | 'yearly' | 'none';
+  planType: 'weekly' | 'monthly' | 'yearly' | 'none';
   startDate: string | null;
   expiryDate: string | null;
 }
@@ -100,13 +100,15 @@ export const mockBackend = {
     localStorage.setItem('mock_subs', JSON.stringify(subs));
   },
 
-  async processPayment(userId: string, planType: 'monthly' | 'yearly') {
+  async processPayment(userId: string, planType: 'weekly' | 'monthly' | 'yearly') {
     await delay(1500); // Simulate payment processing
     
     const startDate = new Date();
     const expiryDate = new Date();
     
-    if (planType === 'monthly') {
+    if (planType === 'weekly') {
+      expiryDate.setDate(expiryDate.getDate() + 7);
+    } else if (planType === 'monthly') {
       expiryDate.setDate(expiryDate.getDate() + 30);
     } else {
       expiryDate.setFullYear(expiryDate.getFullYear() + 1);

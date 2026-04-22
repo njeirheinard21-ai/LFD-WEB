@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { addDoc, collection, query, where, getDocs, updateDoc, doc, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
+import { PricingSection } from '../components/PricingSection';
 
 interface LiveStream {
   isLive: boolean;
@@ -24,7 +25,7 @@ export default function Seminars() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
   const [modalStep, setModalStep] = useState<'form' | 'instructions' | 'key'>('form');
   const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', paymentMethod: 'momo' });
   const [subKey, setSubKey] = useState('');
@@ -165,7 +166,7 @@ export default function Seminars() {
   const faqs = [
     {
       question: 'How does the subscription work?',
-      answer: 'Once you subscribe to either our Monthly or Yearly plan, you get unlimited access to all our premium health seminars and training videos for the duration of your subscription.'
+      answer: 'Once you subscribe to any of our plans (Weekly, Monthly, or Yearly), you get unlimited access to all our premium health seminars and training videos for the duration of your subscription.'
     },
     {
       question: 'Can I cancel my subscription?',
@@ -177,7 +178,7 @@ export default function Seminars() {
     }
   ];
 
-  const handleSubscribe = (plan: 'monthly' | 'yearly') => {
+  const handleSubscribe = (plan: 'weekly' | 'monthly' | 'yearly') => {
     setSelectedPlan(plan);
     setModalStep('form');
     setFormData({
@@ -221,7 +222,7 @@ export default function Seminars() {
         email: formData.email,
         phone: formData.phone,
         planType: selectedPlan,
-        amount: selectedPlan === 'monthly' ? 50 : 500,
+        amount: selectedPlan === 'weekly' ? 5000 : selectedPlan === 'monthly' ? 15000 : 100000,
         paymentMethod: formData.paymentMethod,
         status: 'pending',
         createdAt: new Date().toISOString()
@@ -449,7 +450,7 @@ export default function Seminars() {
                     </div>
 
                     <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
-                      <p className="text-sm text-gray-500 mb-4 uppercase tracking-wider font-bold">Send ${selectedPlan === 'monthly' ? '50' : '500'} to:</p>
+                      <p className="text-sm text-gray-500 mb-4 uppercase tracking-wider font-bold">Send {selectedPlan === 'weekly' ? '5,000 XAF' : selectedPlan === 'monthly' ? '15,000 XAF' : '100,000 XAF'} to:</p>
                       
                       <div className="space-y-4">
                         <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
@@ -805,69 +806,7 @@ export default function Seminars() {
 
       {/* Pricing Section */}
       {!hasAccess && (
-        <section id="pricing" className="py-20 bg-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Choose Your Plan</h2>
-              <p className="text-gray-600 text-lg">Simple, transparent pricing for unlimited access.</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Monthly Plan */}
-              <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm hover:shadow-xl transition-shadow flex flex-col">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Monthly Plan</h3>
-                <p className="text-gray-500 mb-6">Perfect for short-term learning.</p>
-                <div className="mb-8">
-                  <span className="text-5xl font-extrabold text-gray-900">$50</span>
-                  <span className="text-gray-500 font-medium">/month</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-grow">
-                  {['Unlimited access to all seminars', 'New content added monthly', 'Cancel anytime', 'HD Video Quality'].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-gray-600">
-                      <CheckCircle className="h-5 w-5 text-[#059669] flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button 
-                  onClick={() => handleSubscribe('monthly')}
-                  className="w-full py-4 rounded-xl font-bold text-[#059669] bg-emerald-50 hover:bg-emerald-100 transition-colors border border-emerald-200"
-                >
-                  Subscribe Monthly
-                </button>
-              </div>
-
-              {/* Yearly Plan */}
-              <div className="bg-gray-900 rounded-3xl p-8 shadow-2xl relative flex flex-col transform md:-translate-y-4">
-                <div className="absolute top-0 right-6 transform -translate-y-1/2">
-                  <span className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                    Best Value
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Yearly Plan</h3>
-                <p className="text-gray-400 mb-6">Save $100 with annual billing.</p>
-                <div className="mb-8">
-                  <span className="text-5xl font-extrabold text-white">$500</span>
-                  <span className="text-gray-400 font-medium">/year</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-grow">
-                  {['Unlimited access to all seminars', 'New content added monthly', 'Cancel anytime', 'HD Video Quality', 'Priority Support', 'Downloadable Resources'].map((feature, i) => (
-                    <li key={i} className="flex items-center gap-3 text-gray-300">
-                      <CheckCircle className="h-5 w-5 text-[#05c770] flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <button 
-                  onClick={() => handleSubscribe('yearly')}
-                  className="w-full py-4 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg"
-                >
-                  Subscribe Yearly
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+        <PricingSection onSubscribe={handleSubscribe} />
       )}
 
       {/* FAQ Section */}

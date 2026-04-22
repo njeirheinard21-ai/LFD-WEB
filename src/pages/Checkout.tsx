@@ -12,13 +12,13 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  const planType = new URLSearchParams(location.search).get('plan') as 'monthly' | 'yearly';
+  const planType = new URLSearchParams(location.search).get('plan') as 'weekly' | 'monthly' | 'yearly';
   
   useEffect(() => {
     if (!user) {
       navigate('/login');
     }
-    if (planType !== 'monthly' && planType !== 'yearly') {
+    if (planType !== 'weekly' && planType !== 'monthly' && planType !== 'yearly') {
       navigate('/seminars');
     }
   }, [user, planType, navigate]);
@@ -41,10 +41,10 @@ export default function Checkout() {
     }
   };
 
-  if (!user || (planType !== 'monthly' && planType !== 'yearly')) return null;
+  if (!user || (planType !== 'weekly' && planType !== 'monthly' && planType !== 'yearly')) return null;
 
-  const price = planType === 'monthly' ? '$50' : '$500';
-  const planName = planType === 'monthly' ? 'Monthly Plan' : 'Yearly Plan';
+  const price = planType === 'weekly' ? '5,000 XAF' : planType === 'monthly' ? '15,000 XAF' : '100,000 XAF';
+  const planName = planType === 'weekly' ? 'Weekly Plan' : planType === 'monthly' ? 'Monthly Plan' : 'Yearly Plan';
 
   if (success) {
     return (

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { collection, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { PricingSection } from '../components/PricingSection';
 
 interface LiveStream {
   isLive: boolean;
@@ -174,21 +175,17 @@ export default function LiveSeminars() {
 
   if (hasAccess === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div id="blockedMessage" className="bg-white p-12 rounded-[3rem] shadow-2xl max-w-md w-full text-center border border-red-100">
-          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock className="h-10 w-10 text-red-500" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Access Restricted</h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            Your subscription has expired or is not active. Please activate your subscription to view live seminars.
-          </p>
-          <button 
-            onClick={() => navigate('/seminars')}
-            className="w-full bg-[#059669] text-white py-4 rounded-2xl font-bold hover:bg-[#047857] transition-all shadow-lg shadow-green-100"
-          >
-            View Subscription Plans
-          </button>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="bg-red-50 text-red-700 py-4 px-4 text-center font-bold flex flex-col sm:flex-row items-center justify-center gap-2 border-b border-red-100">
+          <Lock className="h-5 w-5" />
+          <span>Live Seminar Access Restricted - Please activate your subscription</span>
+        </div>
+        <div className="flex-grow">
+          <PricingSection 
+            onSubscribe={(plan) => {
+              navigate('/seminars');
+            }} 
+          />
         </div>
       </div>
     );

@@ -11,7 +11,7 @@ interface Subscription {
   name: string;
   email: string;
   phone: string;
-  planType: 'monthly' | 'yearly';
+  planType: 'weekly' | 'monthly' | 'yearly';
   amount: number;
   paymentMethod: 'momo' | 'om';
   status: 'pending' | 'active' | 'expired' | 'key_generated';
@@ -217,15 +217,17 @@ export default function Admin() {
     }
   };
 
-  const generateKey = (planType: 'monthly' | 'yearly') => {
-    const prefix = planType === 'monthly' ? 'OPT' : 'HLT';
+  const generateKey = (planType: 'weekly' | 'monthly' | 'yearly') => {
+    const prefix = planType === 'weekly' ? 'WK' : planType === 'monthly' ? 'OPT' : 'HLT';
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `${prefix}-${random}`;
   };
 
-  const calculateExpiry = (planType: 'monthly' | 'yearly') => {
+  const calculateExpiry = (planType: 'weekly' | 'monthly' | 'yearly') => {
     const date = new Date();
-    if (planType === 'monthly') {
+    if (planType === 'weekly') {
+      date.setDate(date.getDate() + 7);
+    } else if (planType === 'monthly') {
       date.setDate(date.getDate() + 30);
     } else {
       date.setDate(date.getDate() + 365);
@@ -235,7 +237,7 @@ export default function Admin() {
 
   const generateActivationKey = async (sub: Subscription) => {
     const key = generateKey(sub.planType);
-    const durationDays = sub.planType === 'monthly' ? 30 : 365;
+    const durationDays = sub.planType === 'weekly' ? 7 : sub.planType === 'monthly' ? 30 : 365;
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // Key expires in 24h if unused
 
@@ -551,11 +553,11 @@ export default function Admin() {
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold capitalize ${
-                                  sub.planType === 'yearly' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                                  sub.planType === 'yearly' ? 'bg-purple-100 text-purple-800' : sub.planType === 'monthly' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                                 }`}>
                                   {sub.planType}
                                 </span>
-                                <div className="text-xs text-gray-500 mt-1">${sub.amount}</div>
+                                <div className="text-xs text-gray-500 mt-1">{sub.amount.toLocaleString()} XAF</div>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
@@ -756,11 +758,11 @@ export default function Admin() {
                           <div>
                             <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Plan</div>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
-                              sub.planType === 'yearly' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                              sub.planType === 'yearly' ? 'bg-purple-100 text-purple-800' : sub.planType === 'monthly' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                             }`}>
                               {sub.planType}
                             </span>
-                            <div className="text-xs text-gray-900 font-bold mt-1">${sub.amount}</div>
+                            <div className="text-xs text-gray-900 font-bold mt-1">{sub.amount.toLocaleString()} XAF</div>
                           </div>
                           <div>
                             <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Payment</div>

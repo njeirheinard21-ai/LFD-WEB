@@ -2,20 +2,11 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from "firebase/analytics";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBg3g8XE8DpT_M0f0aaIbCNhC2CFz1G0es",
-  authDomain: "lfd-service.firebaseapp.com",
-  projectId: "lfd-service",
-  storageBucket: "lfd-service.firebasestorage.app",
-  messagingSenderId: "151104557438",
-  appId: "1:151104557438:web:ceb85304a5e1190abbe32f",
-  measurementId: "G-L82VRFTNFW"
-};
+import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 
 // TEMP debug code as requested
 onAuthStateChanged(auth, (user) => {

@@ -1,9 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowRight, Activity, Shield, Clock, Users, Star, PhoneCall, HeartPulse, CheckCircle, Calendar, Phone } from 'lucide-react';
 import { products } from '../data/products';
+import { PricingSection } from '../components/PricingSection';
 
 export default function Home() {
+  const navigate = useNavigate();
+
   return (
     <div>
       {/* Hero Section */}
@@ -186,6 +189,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Subscription Plans */}
+      <PricingSection onSubscribe={() => navigate('/seminars')} />
 
       {/* Testimonials */}
       <section className="py-24 bg-gray-50">
