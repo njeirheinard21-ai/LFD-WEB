@@ -26,7 +26,7 @@ export default function Seminars() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
-  const [modalStep, setModalStep] = useState<'form' | 'instructions' | 'key'>('form');
+  const [modalStep, setModalStep] = useState<'form' | 'instructions' | 'verification'>('form');
   const [formData, setFormData] = useState({ fullName: '', phone: '', email: '', paymentMethod: 'momo' });
   const [subKey, setSubKey] = useState('');
   const [modalError, setModalError] = useState('');
@@ -450,7 +450,7 @@ export default function Seminars() {
                     </div>
 
                     <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
-                      <p className="text-sm text-gray-500 mb-4 uppercase tracking-wider font-bold">Send {selectedPlan === 'weekly' ? '5,000 XAF' : selectedPlan === 'monthly' ? '15,000 XAF' : '100,000 XAF'} to:</p>
+                      <p className="text-sm text-gray-500 mb-4 uppercase tracking-wider font-bold">Send {selectedPlan === 'weekly' ? '3,000 XAF' : selectedPlan === 'monthly' ? '10,000 XAF' : '100,000 XAF'} to:</p>
                       
                       <div className="space-y-4">
                         <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
@@ -471,10 +471,10 @@ export default function Seminars() {
                     </div>
 
                     <button
-                      onClick={() => setModalStep('key')}
+                      onClick={() => setModalStep('verification')}
                       className="w-full py-3.5 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg"
                     >
-                      I have paid, enter key
+                      I have paid
                     </button>
                     <button
                       onClick={() => setIsModalOpen(false)}
@@ -486,47 +486,28 @@ export default function Seminars() {
                 ) : (
                   <>
                     <div className="text-center mb-6">
-                      <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                        <Lock className="h-8 w-8 text-green-600" />
+                      <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                        <CheckCircle className="h-8 w-8 text-blue-600" />
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter Your Subscription Key</h2>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You For Subscribing</h2>
                       <p className="text-gray-600">
-                        Please enter the key sent to your phone/email to activate live access.
+                        Payment Verifications are on going. Once your Payments have been verified, you will be granted acces to the Live seminar page till your subscription plan expires.
                       </p>
                     </div>
 
-                    {modalError && (
-                      <div className="mb-6 bg-red-50 text-red-700 p-3 rounded-xl text-sm text-center">
-                        {modalError}
-                      </div>
-                    )}
-
-                    <form onSubmit={handleKeySubmit} className="space-y-4">
-                      <div>
-                        <input
-                          type="text"
-                          required
-                          value={subKey}
-                          onChange={(e) => setSubKey(e.target.value)}
-                          className="w-full px-4 py-4 text-center text-lg tracking-widest font-mono border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#059669] focus:border-transparent outline-none transition-all uppercase"
-                          placeholder="XXXX-XXXX-XXXX"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-3.5 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg disabled:opacity-50"
-                      >
-                        {isSubmitting ? 'Activating...' : 'Activate Access'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setModalStep('instructions')}
-                        className="w-full py-2 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
-                      >
-                        Back to instructions
-                      </button>
-                    </form>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="w-full py-3.5 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg"
+                    >
+                      Close Window
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModalStep('instructions')}
+                      className="w-full py-2 mt-2 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      Back to instructions
+                    </button>
                   </>
                 )}
               </div>

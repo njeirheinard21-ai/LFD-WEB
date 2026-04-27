@@ -9,6 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showSignUpOption, setShowSignUpOption] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -18,25 +19,10 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowSignUpOption(false);
     setLoading(true);
     try {
-      let userCredential;
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      } catch (signInError: any) {
-        if (signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/user-not-found') {
-          try {
-            userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-          } catch (registerError: any) {
-            if (registerError.code === 'auth/email-already-in-use') {
-              throw signInError; // Wrong password
-            }
-            throw registerError;
-          }
-        } else {
-          throw signInError;
-        }
-      }
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       
       // Check if user exists in Firestore, if not, add them
       const path = `users/${userCredential.user.uid}`;
@@ -58,7 +44,12 @@ export default function Login() {
 
       navigate('/dashboard');
     } catch (err: any) {
-      setError(handleAuthError(err));
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('Invalid email or password. Please try again or create a new account if you do not have one.');
+        setShowSignUpOption(true);
+      } else {
+        setError(handleAuthError(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -187,9 +178,21 @@ export default function Login() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 text-red-700 p-3 rounded-xl flex items-center gap-2 text-sm">
-              <AlertCircle className="h-4 w-4" />
-              {error}
+            <div className="bg-red-50 text-red-700 p-4 rounded-xl flex flex-col gap-3 text-sm border border-red-100">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <p className="leading-relaxed">{error}</p>
+              </div>
+              {showSignUpOption && (
+                <div className="pl-7">
+                  <Link 
+                    to="/register" 
+                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                  >
+                    Create new Account
+                  </Link>
+                </div>
+              )}
             </div>
           )}
           <div className="space-y-4">

@@ -43,7 +43,7 @@ export default function Checkout() {
 
   if (!user || (planType !== 'weekly' && planType !== 'monthly' && planType !== 'yearly')) return null;
 
-  const price = planType === 'weekly' ? '5,000 XAF' : planType === 'monthly' ? '15,000 XAF' : '100,000 XAF';
+  const price = planType === 'weekly' ? '3,000 XAF' : planType === 'monthly' ? '10,000 XAF' : '100,000 XAF';
   const planName = planType === 'weekly' ? 'Weekly Plan' : planType === 'monthly' ? 'Monthly Plan' : 'Yearly Plan';
 
   if (success) {

@@ -34,7 +34,7 @@ export function PricingSection({ onSubscribe }: PricingSectionProps) {
               <p className="text-sm text-gray-500 font-medium tracking-wide">A quick start into better health.</p>
             </div>
             <div className="mb-10 flex items-baseline gap-2">
-              <span className="text-5xl font-black text-gray-900 tracking-tight">5,000</span>
+              <span className="text-5xl font-black text-gray-900 tracking-tight">3,000</span>
               <span className="text-sm font-bold text-gray-400 uppercase tracking-widest flex flex-col leading-tight"><span>XAF</span><span>/week</span></span>
             </div>
             <ul className="space-y-5 mb-10 flex-grow">
@@ -73,7 +73,7 @@ export function PricingSection({ onSubscribe }: PricingSectionProps) {
               <p className="text-sm text-gray-400 font-medium tracking-wide">Perfect for consistent learning.</p>
             </div>
             <div className="mb-10 flex items-baseline gap-2">
-              <span className="text-6xl font-black text-white tracking-tight">15,000</span>
+              <span className="text-6xl font-black text-white tracking-tight">10,000</span>
               <span className="text-sm font-bold text-gray-400 uppercase tracking-widest flex flex-col leading-tight"><span>XAF</span><span>/month</span></span>
             </div>
             <ul className="space-y-5 mb-10 flex-grow">
