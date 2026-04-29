@@ -33,11 +33,13 @@ service cloud.firestore {
     function isValidSubscription(data) {
       return data.keys().hasAll(['userId', 'planType', 'status', 'createdAt']) &&
              data.userId is string && data.userId.size() < 128 &&
-             data.planType in ['monthly', 'yearly'] &&
+             data.planType in ['weekly', 'monthly', 'yearly'] &&
              data.status in ['pending', 'active', 'expired', 'key_generated'] &&
              (!('name' in data) || (data.name is string && data.name.size() < 100)) &&
              (!('email' in data) || (data.email is string && data.email.size() < 100)) &&
-             (!('phone' in data) || (data.phone is string && data.phone.size() < 20));
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 20)) &&
+             (!('paymentMethod' in data) || (data.paymentMethod in ['momo', 'om', 'cash'])) &&
+             (!('amount' in data) || (data.amount is number));
     }
 
     function isValidActivationKey(data) {

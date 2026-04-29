@@ -1,11 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowRight, Activity, Shield, Clock, Users, Star, PhoneCall, HeartPulse, CheckCircle, Calendar, Phone } from 'lucide-react';
+import {ArrowRight, Clock, PhoneCall, Star, Calendar, Phone } from 'lucide-react';
 import { products } from '../data/products';
 import { PricingSection } from '../components/PricingSection';
+import { useTranslation } from 'react-i18next';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div>
@@ -28,10 +30,10 @@ export default function Home() {
             className="max-w-[700px]"
           >
             <h1 className="text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold text-[#00D084] tracking-tight leading-[1.1] mb-6 drop-shadow-md">
-              For You & Your Family
+              {t('home.hero_title', 'For You & Your Family')}
             </h1>
             <p className="text-white font-medium text-lg md:text-xl leading-relaxed max-w-[500px] mb-10 drop-shadow-sm">
-              Experience world-class medical care with our team of expert specialists. We combine compassionate care with cutting-edge technology to ensure your optimal health.
+              {t('home.hero_subtitle', 'Experience world-class medical care with our team of expert specialists. We combine compassionate care with cutting-edge technology to ensure your optimal health.')}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -40,13 +42,13 @@ export default function Home() {
                 className="inline-flex justify-center items-center gap-2 bg-[#059669] text-white px-8 py-4 rounded-full font-bold hover:bg-[#047857] transition-all shadow-[0_8px_20px_rgba(5,150,105,0.3)] hover:shadow-[0_8px_25px_rgba(5,150,105,0.4)] w-full sm:w-auto min-h-[44px]"
               >
                 <Calendar className="h-5 w-5" />
-                Book Appointment
+                {t('home.book_appointment', 'Book Appointment')}
               </Link>
               <Link 
                 to="/products" 
                 className="inline-flex justify-center items-center gap-2 bg-transparent border border-white/30 text-white px-8 py-4 rounded-full font-bold hover:scale-105 hover:border-white transition-all w-full sm:w-auto min-h-[44px]"
               >
-                Explore Products <ArrowRight className="h-5 w-5" />
+                {t('home.explore_products', 'Explore Products')} <ArrowRight className="h-5 w-5" />
               </Link>
             </div>
           </motion.div>
@@ -66,8 +68,8 @@ export default function Home() {
                 <div className="bg-emerald-100 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
                   <Calendar className="h-6 w-6 text-[#059669]" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Online Appointment</h3>
-                <p className="text-gray-600 text-lg">Schedule your visit with our specialists easily</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('home.card1_title', 'Online Appointment')}</h3>
+                <p className="text-gray-600 text-lg">{t('home.card1_desc', 'Schedule your visit with our specialists easily')}</p>
               </motion.div>
 
               {/* Card 2 */}
@@ -80,15 +82,15 @@ export default function Home() {
                 <div className="bg-purple-100 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
                   <Clock className="h-6 w-6 text-[#8B5CF6]" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Working Hours</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('home.card2_title', 'Working Hours')}</h3>
                 <div className="flex flex-col gap-2 text-gray-600 font-medium text-lg mt-4">
                   <div className="flex justify-between items-center">
-                    <span>Wed - Sat</span>
-                    <span className="text-gray-900 font-bold">6:00 AM - 6:00 PM</span>
+                    <span>{t('home.wed_sat', 'Wed - Sat')}</span>
+                    <span className="text-gray-900 font-bold">{t('home.hours', '6:00 AM - 6:00 PM')}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm text-red-500">
-                    <span>Sun - Tue</span>
-                    <span>Closed</span>
+                    <span>{t('home.sun_tue', 'Sun - Tue')}</span>
+                    <span>{t('home.closed', 'Closed')}</span>
                   </div>
                 </div>
               </motion.div>
@@ -103,8 +105,8 @@ export default function Home() {
                 <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
                   <Phone className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3">Emergency Cases</h3>
-                <p className="text-emerald-50 text-lg">Our emergency department is open 24/7 to handle critical situations.</p>
+                <h3 className="text-2xl font-bold text-white mb-3">{t('home.card3_title', 'Emergency Cases')}</h3>
+                <p className="text-emerald-50 text-lg">{t('home.card3_desc', 'Our emergency department is open 24/7 to handle critical situations.')}</p>
               </motion.div>
             </div>
       </div>
@@ -114,10 +116,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {[
-              { label: 'Years Experience', value: '25+' },
-              { label: 'Medical Specialists', value: '150+' },
-              { label: 'Happy Patients', value: '50k+' },
-              { label: 'Hospital Rooms', value: '300+' },
+              { label: t('home.stat1', 'Years Experience'), value: '25+' },
+              { label: t('home.stat2', 'Medical Specialists'), value: '150+' },
+              { label: t('home.stat3', 'Happy Patients'), value: '50k+' },
+              { label: t('home.stat4', 'Hospital Rooms'), value: '300+' },
             ].map((stat, i) => (
               <div key={i} className="px-4">
                 <div className="text-4xl font-extrabold text-white mb-2">{stat.value}</div>
@@ -132,8 +134,8 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Premium Healthcare Products</h2>
-            <p className="text-lg text-gray-600">Discover our curated selection of high-quality medical supplies and wellness products designed for your optimal health.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('home.products_title', 'Premium Healthcare Products')}</h2>
+            <p className="text-lg text-gray-600">{t('home.products_desc', 'Discover our curated selection of high-quality medical supplies and wellness products designed for your optimal health.')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -154,7 +156,7 @@ export default function Home() {
                   </div>
                   <p className="text-gray-600 mb-6 line-clamp-2">{product.description}</p>
                   <Link to={`/products/${product.id}`} className="w-full justify-center bg-white text-emerald-600 border border-emerald-600 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all">
-                    View Details <ArrowRight className="h-4 w-4" />
+                    {t('home.view_details', 'View Details')} <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
               </div>
@@ -163,7 +165,7 @@ export default function Home() {
           
           <div className="mt-12 text-center">
             <Link to="/products" className="inline-flex items-center gap-2 text-purple-700 font-semibold hover:text-purple-800">
-              Browse all products <ArrowRight className="h-5 w-5" />
+              {t('home.browse_all', 'Browse all products')} <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
         </div>
@@ -177,8 +179,8 @@ export default function Home() {
               <PhoneCall className="w-64 h-64" />
             </div>
             <div className="relative z-10 max-w-2xl text-center lg:text-left">
-              <h2 className="text-[clamp(1.75rem,3vw,2.25rem)] font-bold text-white mb-4">Need Emergency Medical Help?</h2>
-              <p className="text-purple-200 text-lg mb-0">Our emergency department is open 24/7. Don't hesitate to call us immediately for urgent medical assistance.</p>
+              <h2 className="text-[clamp(1.75rem,3vw,2.25rem)] font-bold text-white mb-4">{t('home.cta_title', 'Need Emergency Medical Help?')}</h2>
+              <p className="text-purple-200 text-lg mb-0">{t('home.cta_desc', 'Our emergency department is open 24/7. Don\'t hesitate to call us immediately for urgent medical assistance.')}</p>
             </div>
             <div className="relative z-10 flex-shrink-0 w-full lg:w-auto">
               <a href="tel:+237674766946" className="flex justify-center items-center gap-3 bg-white text-purple-900 px-8 py-4 rounded-xl font-bold text-xl hover:bg-gray-100 transition-colors shadow-xl w-full lg:w-auto min-h-[44px]">
@@ -197,15 +199,15 @@ export default function Home() {
       <section className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">What Our Patients Say</h2>
-            <p className="text-lg text-gray-600">Read about the experiences of our patients and their journey to better health with Optimal Healthcare.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('home.testimonials_title', 'What Our Patients Say')}</h2>
+            <p className="text-lg text-gray-600">{t('home.testimonials_desc', 'Read about the experiences of our patients and their journey to better health with Optimal Healthcare.')}</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { name: 'Sarah Johnson', text: 'The care I received at Optimal Healthcare was outstanding. The doctors were attentive and the staff made me feel comfortable throughout my treatment.' },
-              { name: 'Michael Chen', text: 'I highly recommend their cardiology department. Dr. Smith took the time to explain everything clearly and put my mind at ease.' },
-              { name: 'Emily Davis', text: 'Booking an appointment was seamless, and I barely had to wait when I arrived. A truly professional and efficient hospital.' }
+              { name: 'Sarah Johnson', text: t('home.test1', 'The care I received at Optimal Healthcare was outstanding. The doctors were attentive and the staff made me feel comfortable throughout my treatment.') },
+              { name: 'Michael Chen', text: t('home.test2', 'I highly recommend their cardiology department. Dr. Smith took the time to explain everything clearly and put my mind at ease.') },
+              { name: 'Emily Davis', text: t('home.test3', 'Booking an appointment was seamless, and I barely had to wait when I arrived. A truly professional and efficient hospital.') }
             ].map((testimonial, i) => (
               <div key={i} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex gap-1 mb-4">
@@ -222,8 +224,8 @@ export default function Home() {
       <section className="py-20 bg-white border-t border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Find Us</h2>
-            <p className="text-lg text-gray-600">Visit Optimal Healthcare at our location for quality medical care.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('home.find_us_title', 'Find Us')}</h2>
+            <p className="text-lg text-gray-600">{t('home.find_us_desc', 'Visit Optimal Healthcare at our location for quality medical care.')}</p>
           </div>
           <div className="w-full h-[300px] md:h-[450px] rounded-3xl overflow-hidden shadow-lg border border-gray-200">
             <iframe 

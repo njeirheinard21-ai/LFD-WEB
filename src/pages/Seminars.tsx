@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, CheckCircle, Star, ChevronDown, ChevronUp, Shield, Award, Lock, PlayCircle, X, Smartphone, VideoOff, Radio, AlertCircle, ArrowRight, Maximize, Minimize } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, Star, ChevronDown, ChevronUp, Shield, Award, Lock, PlayCircle, X, Smartphone, VideoOff, Radio, AlertCircle, ArrowRight, Maximize, Minimize, Banknote } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { addDoc, collection, query, where, getDocs, updateDoc, doc, onSnapshot } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { PricingSection } from '../components/PricingSection';
+import { PRICING, formatPrice } from '../lib/pricing';
+import { useTranslation } from 'react-i18next';
 
 interface LiveStream {
   isLive: boolean;
@@ -22,6 +24,7 @@ export default function Seminars() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { user, subscription, loading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -222,7 +225,7 @@ export default function Seminars() {
         email: formData.email,
         phone: formData.phone,
         planType: selectedPlan,
-        amount: selectedPlan === 'weekly' ? 5000 : selectedPlan === 'monthly' ? 15000 : 100000,
+        amount: PRICING[selectedPlan].amount,
         paymentMethod: formData.paymentMethod,
         status: 'pending',
         createdAt: new Date().toISOString()
@@ -352,9 +355,9 @@ export default function Seminars() {
               <div className="p-8">
                 {modalStep === 'form' ? (
                   <>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Subscription</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('seminars.complete_subscription', 'Complete Subscription')}</h2>
                     <p className="text-gray-600 mb-6">
-                      You selected the <span className="font-bold capitalize text-[#059669]">{selectedPlan}</span> plan.
+                      {t('seminars.selected_plan', 'You selected the')} <span className="font-bold capitalize text-[#059669]">{t(`pricing.${selectedPlan}`, selectedPlan)}</span> {t('seminars.plan', 'plan')}.
                     </p>
 
                     {modalError && (
@@ -365,7 +368,7 @@ export default function Seminars() {
 
                     <form onSubmit={handleFormSubmit} className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('seminars.full_name', 'Full Name')}</label>
                         <input
                           type="text"
                           required
@@ -376,7 +379,7 @@ export default function Seminars() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('seminars.phone', 'Phone Number')}</label>
                         <input
                           type="tel"
                           required
@@ -387,7 +390,7 @@ export default function Seminars() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{t('seminars.email', 'Email Address')}</label>
                         <input
                           type="email"
                           required
@@ -399,8 +402,8 @@ export default function Seminars() {
                       </div>
 
                       <div className="pt-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('seminars.payment_method', 'Payment Method')}</label>
+                        <div className="grid grid-cols-3 gap-3">
                           <button
                             type="button"
                             onClick={() => setFormData({ ...formData, paymentMethod: 'momo' })}
@@ -425,6 +428,18 @@ export default function Seminars() {
                             <Smartphone className={`h-6 w-6 mb-1 ${formData.paymentMethod === 'om' ? 'text-orange-600' : 'text-gray-400'}`} />
                             <span className={`text-sm font-bold ${formData.paymentMethod === 'om' ? 'text-orange-700' : 'text-gray-500'}`}>Orange Money</span>
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, paymentMethod: 'cash' })}
+                            className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
+                              formData.paymentMethod === 'cash' 
+                                ? 'border-emerald-400 bg-emerald-50' 
+                                : 'border-gray-200 hover:border-emerald-200'
+                            }`}
+                          >
+                            <Banknote className={`h-6 w-6 mb-1 ${formData.paymentMethod === 'cash' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                            <span className={`text-sm font-bold ${formData.paymentMethod === 'cash' ? 'text-emerald-700' : 'text-gray-500'}`}>Cash</span>
+                          </button>
                         </div>
                       </div>
 
@@ -433,7 +448,7 @@ export default function Seminars() {
                         disabled={isSubmitting}
                         className="w-full mt-6 py-3.5 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg disabled:opacity-50"
                       >
-                        {isSubmitting ? 'Processing...' : 'Submit Subscription'}
+                        {isSubmitting ? t('common.loading', 'Processing...') : t('seminars.submit_subscription', 'Submit Subscription')}
                       </button>
                     </form>
                   </>
@@ -443,29 +458,39 @@ export default function Seminars() {
                       <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
                         <Smartphone className="h-8 w-8 text-yellow-600" />
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment Instructions</h2>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('seminars.payment_instructions', 'Payment Instructions')}</h2>
                       <p className="text-gray-600">
-                        Please follow the steps below to complete your payment.
+                        {t('seminars.payment_instruction_desc', 'Please follow the steps below to complete your payment.')}
                       </p>
                     </div>
 
                     <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100">
-                      <p className="text-sm text-gray-500 mb-4 uppercase tracking-wider font-bold">Send {selectedPlan === 'weekly' ? '3,000 XAF' : selectedPlan === 'monthly' ? '10,000 XAF' : '100,000 XAF'} to:</p>
+                      <p className="text-sm text-gray-500 mb-4 uppercase tracking-wider font-bold">{t('seminars.send', 'Send')} {formatPrice(PRICING[selectedPlan].amount)} {t('seminars.to', 'to')}:</p>
                       
                       <div className="space-y-4">
-                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-                          <span className="font-bold text-yellow-600">MTN MoMo</span>
-                          <span className="font-mono font-bold">+237 6XX XXX XXX</span>
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
-                          <span className="font-bold text-orange-600">Orange Money</span>
-                          <span className="font-mono font-bold">+237 6XX XXX XXX</span>
-                        </div>
+                        {formData.paymentMethod === 'momo' && (
+                          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+                            <span className="font-bold text-yellow-600">MTN MoMo</span>
+                            <span className="font-mono font-bold">+237 6XX XXX XXX</span>
+                          </div>
+                        )}
+                        {formData.paymentMethod === 'om' && (
+                          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+                            <span className="font-bold text-orange-600">Orange Money</span>
+                            <span className="font-mono font-bold">+237 6XX XXX XXX</span>
+                          </div>
+                        )}
+                        {formData.paymentMethod === 'cash' && (
+                          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+                            <span className="font-bold text-emerald-600">Cash Payment</span>
+                            <span className="text-sm font-bold text-gray-700 text-right">Pay directly at our office front desk</span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <p className="text-sm text-blue-800 font-medium">
-                          <span className="font-bold">Important:</span> Use your email (<span className="font-bold">{user?.email}</span>) as the payment reference.
+                          <span className="font-bold">{t('common.important', 'Important')}:</span> {t('seminars.use_email', 'Use your email')} (<span className="font-bold">{user?.email}</span>) {t('seminars.as_payment_ref', 'as the payment reference.')}
                         </p>
                       </div>
                     </div>
@@ -474,13 +499,13 @@ export default function Seminars() {
                       onClick={() => setModalStep('verification')}
                       className="w-full py-3.5 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg"
                     >
-                      I have paid
+                      {t('seminars.i_have_paid', 'I have paid')}
                     </button>
                     <button
                       onClick={() => setIsModalOpen(false)}
                       className="w-full mt-3 py-3.5 rounded-xl font-bold text-gray-500 hover:text-gray-700 transition-colors"
                     >
-                      Close and pay later
+                      {t('seminars.pay_later', 'Close and pay later')}
                     </button>
                   </>
                 ) : (
@@ -489,9 +514,9 @@ export default function Seminars() {
                       <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                         <CheckCircle className="h-8 w-8 text-blue-600" />
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Thank You For Subscribing</h2>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('seminars.thank_you', 'Thank You For Subscribing')}</h2>
                       <p className="text-gray-600">
-                        Payment Verifications are on going. Once your Payments have been verified, you will be granted acces to the Live seminar page till your subscription plan expires.
+                        {t('seminars.verifying', 'Payment Verifications are on going. Once your Payments have been verified, you will be granted acces to the Live seminar page till your subscription plan expires.')}
                       </p>
                     </div>
 
@@ -499,14 +524,14 @@ export default function Seminars() {
                       onClick={() => setIsModalOpen(false)}
                       className="w-full py-3.5 rounded-xl font-bold text-white bg-[#059669] hover:bg-[#047857] transition-colors shadow-lg"
                     >
-                      Close Window
+                      {t('seminars.close', 'Close Window')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setModalStep('instructions')}
                       className="w-full py-2 mt-2 rounded-xl text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
                     >
-                      Back to instructions
+                      {t('seminars.back_to_instructions', 'Back to instructions')}
                     </button>
                   </>
                 )}

@@ -5,10 +5,12 @@ import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { deleteUser, updateProfile } from 'firebase/auth';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { LogOut, PlayCircle, CreditCard, AlertTriangle, CheckCircle, Edit2, Trash2, X, Save, AlertCircle as AlertCircleIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
   const { user, subscription, loading, logout, setUser } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', phone: '' });
@@ -115,21 +117,21 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome, {user.fullName.split(' ')[0]}!</h1>
-            <p className="text-gray-600">Manage your account and seminar access.</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.welcome', 'Welcome, ')}{user.fullName.split(' ')[0]}!</h1>
+            <p className="text-gray-600">{t('dashboard.manage_account', 'Manage your account and seminar access.')}</p>
           </div>
           <button 
             onClick={handleLogout}
             className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors font-medium"
           >
             <LogOut className="h-5 w-5" />
-            Sign Out
+            {t('dashboard.sign_out', 'Sign Out')}
           </button>
         </div>
 
         {/* Subscription Status Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Subscription Status</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6">{t('dashboard.status_title', 'Subscription Status')}</h2>
           
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
@@ -145,21 +147,21 @@ export default function Dashboard() {
               
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-gray-600 font-medium">Status:</span>
+                  <span className="text-gray-600 font-medium">{t('dashboard.status', 'Status:')}</span>
                   <span className={`font-bold uppercase tracking-wider text-sm px-2 py-0.5 rounded-full ${
                     isActive ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
                   }`}>
-                    {subscription?.status || 'None'}
+                    {subscription?.status || t('dashboard.none', 'None')}
                   </span>
                 </div>
                 {subscription?.planType !== 'none' && (
                   <div className="text-gray-600">
-                    Plan: <span className="font-semibold capitalize text-gray-900">{subscription?.planType}</span>
+                    {t('dashboard.plan', 'Plan:')} <span className="font-semibold capitalize text-gray-900">{subscription?.planType}</span>
                   </div>
                 )}
                 {subscription?.expiryDate && (
                   <div className="text-sm text-gray-500 mt-1">
-                    Expires: {new Date(subscription.expiryDate).toLocaleDateString()}
+                    {t('dashboard.expires', 'Expires:')} {new Date(subscription.expiryDate).toLocaleDateString()}
                   </div>
                 )}
               </div>
@@ -172,7 +174,7 @@ export default function Dashboard() {
                   className="flex items-center justify-center gap-2 bg-[#8B5CF6] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#7C3AED] transition-all shadow-md hover:shadow-lg"
                 >
                   <PlayCircle className="h-5 w-5" />
-                  Access Seminars
+                  {t('dashboard.access_seminars', 'Access Seminars')}
                 </Link>
               ) : (
                 <Link
@@ -180,7 +182,7 @@ export default function Dashboard() {
                   className="flex items-center justify-center gap-2 bg-[#059669] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#047857] transition-all shadow-md hover:shadow-lg"
                 >
                   <CreditCard className="h-5 w-5" />
-                  {isExpired ? 'Renew Subscription' : 'Subscribe Now'}
+                  {isExpired ? t('dashboard.renew', 'Renew Subscription') : t('dashboard.subscribe', 'Subscribe Now')}
                 </Link>
               )}
             </div>
@@ -190,13 +192,13 @@ export default function Dashboard() {
         {/* Account Details */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Account Details</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('dashboard.account_details', 'Account Details')}</h2>
             {!isEditing && (
               <button 
                 onClick={() => setIsEditing(true)}
                 className="flex items-center gap-2 text-sm font-medium text-[#059669] hover:text-[#047857] transition-colors"
               >
-                <Edit2 className="h-4 w-4" /> Edit Profile
+                <Edit2 className="h-4 w-4" /> {t('dashboard.edit_profile', 'Edit Profile')}
               </button>
             )}
           </div>
@@ -219,7 +221,7 @@ export default function Dashboard() {
             <form onSubmit={handleUpdateProfile} className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.full_name', 'Full Name')}</label>
                   <input 
                     type="text" 
                     required
@@ -229,7 +231,7 @@ export default function Dashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.email', 'Email Address')}</label>
                   <input 
                     type="email" 
                     disabled
@@ -239,7 +241,7 @@ export default function Dashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('dashboard.phone', 'Phone Number')}</label>
                   <input 
                     type="tel" 
                     required
@@ -255,7 +257,7 @@ export default function Dashboard() {
                   disabled={isSaving}
                   className="flex items-center gap-2 bg-[#059669] text-white px-6 py-2.5 rounded-xl font-medium hover:bg-[#047857] transition-all shadow-sm hover:shadow-md disabled:opacity-50"
                 >
-                  <Save className="h-4 w-4" /> {isSaving ? 'Saving...' : 'Save Changes'}
+                  <Save className="h-4 w-4" /> {isSaving ? t('dashboard.saving', 'Saving...') : t('dashboard.save_changes', 'Save Changes')}
                 </button>
                 <button
                   type="button"
@@ -268,50 +270,50 @@ export default function Dashboard() {
                   disabled={isSaving}
                   className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
                 >
-                  <X className="h-4 w-4" /> Cancel
+                  <X className="h-4 w-4" /> {t('dashboard.cancel', 'Cancel')}
                 </button>
               </div>
             </form>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-500 mb-1">{t('dashboard.full_name', 'Full Name')}</label>
                 <div className="text-gray-900 font-medium">{user.fullName}</div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-500 mb-1">{t('dashboard.email', 'Email Address')}</label>
                 <div className="text-gray-900 font-medium">{user.email}</div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Phone Number</label>
-                <div className="text-gray-900 font-medium">{user.phone || 'Not provided'}</div>
+                <label className="block text-sm font-medium text-gray-500 mb-1">{t('dashboard.phone', 'Phone Number')}</label>
+                <div className="text-gray-900 font-medium">{user.phone || t('dashboard.not_provided', 'Not provided')}</div>
               </div>
             </div>
           )}
 
           {/* Danger Zone */}
           <div className="mt-12 pt-8 border-t border-red-100">
-            <h3 className="text-lg font-bold text-red-600 mb-2">Danger Zone</h3>
-            <p className="text-gray-600 text-sm mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+            <h3 className="text-lg font-bold text-red-600 mb-2">{t('dashboard.danger_zone', 'Danger Zone')}</h3>
+            <p className="text-gray-600 text-sm mb-4">{t('dashboard.danger_desc', 'Once you delete your account, there is no going back. Please be certain.')}</p>
             
             {showDeleteConfirm ? (
               <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-                <h4 className="font-bold text-red-800 mb-2">Are you absolutely sure?</h4>
-                <p className="text-red-600 text-sm mb-6">This action cannot be undone. This will permanently delete your account, subscription, and remove your data from our servers.</p>
+                <h4 className="font-bold text-red-800 mb-2">{t('dashboard.are_you_sure', 'Are you absolutely sure?')}</h4>
+                <p className="text-red-600 text-sm mb-6">{t('dashboard.delete_warning', 'This action cannot be undone. This will permanently delete your account, subscription, and remove your data from our servers.')}</p>
                 <div className="flex flex-wrap gap-3">
                   <button
                     onClick={handleDeleteAccount}
                     disabled={isSaving}
                     className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-medium hover:bg-red-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 flex items-center gap-2"
                   >
-                    {isSaving ? 'Deleting...' : <><Trash2 className="h-4 w-4" /> Yes, delete my account</>}
+                    {isSaving ? t('dashboard.deleting', 'Deleting...') : <><Trash2 className="h-4 w-4" /> {t('dashboard.yes_delete', 'Yes, delete my account')}</>}
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isSaving}
                     className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition-all disabled:opacity-50"
                   >
-                    Cancel
+                    {t('dashboard.cancel', 'Cancel')}
                   </button>
                 </div>
               </div>
@@ -320,7 +322,7 @@ export default function Dashboard() {
                 onClick={() => setShowDeleteConfirm(true)}
                 className="flex items-center gap-2 text-red-600 border border-red-200 bg-white hover:bg-red-50 px-6 py-2.5 rounded-xl font-medium transition-all"
               >
-                <Trash2 className="h-4 w-4" /> Delete Account
+                <Trash2 className="h-4 w-4" /> {t('dashboard.delete_account', 'Delete Account')}
               </button>
             )}
           </div>

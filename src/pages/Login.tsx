@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmail
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType, handleAuthError } from '../lib/firebase';
 import { Mail, Lock, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,6 +16,7 @@ export default function Login() {
   const [resetSent, setResetSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +47,7 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Invalid email or password. Please try again or create a new account if you do not have one.');
+        setError(t('auth.invalid_cred', 'Invalid email or password. Please try again or create a new account if you do not have one.'));
         setShowSignUpOption(true);
       } else {
         setError(handleAuthError(err));
@@ -58,7 +60,7 @@ export default function Login() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      setError('Please enter your email address');
+      setError(t('auth.enter_email', 'Please enter your email address'));
       return;
     }
     setError('');
@@ -68,7 +70,7 @@ export default function Login() {
       setResetSent(true);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to send reset email');
+      setError(err.message || t('auth.reset_failed', 'Failed to send reset email'));
     } finally {
       setLoading(false);
     }
@@ -81,9 +83,9 @@ export default function Login() {
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
             <CheckCircle className="h-6 w-6 text-green-600" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Check your email</h2>
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">{t('auth.check_email', 'Check your email')}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            We sent you a password change link to <span className="font-medium text-gray-900">{email}</span>
+            {t('auth.reset_sent_to', 'We sent you a password change link to')} <span className="font-medium text-gray-900">{email}</span>
           </p>
           <button
             onClick={() => {
@@ -93,7 +95,7 @@ export default function Login() {
             }}
             className="mt-8 w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#059669] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#059669] transition-colors"
           >
-            Sign in
+            {t('auth.login', 'Sign in')}
           </button>
         </div>
       </div>
@@ -106,10 +108,10 @@ export default function Login() {
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Reset Password
+              {t('auth.reset_password', 'Reset Password')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Enter your email and we'll send you a link to reset your password.
+              {t('auth.reset_desc', "Enter your email and we'll send you a link to reset your password.")}
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleResetPassword}>
@@ -120,7 +122,7 @@ export default function Login() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email', 'Email address')}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
@@ -141,7 +143,7 @@ export default function Login() {
                 disabled={loading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#059669] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#059669] disabled:opacity-50 transition-colors"
               >
-                {loading ? 'Sending...' : 'Get Reset Link'}
+                {loading ? t('common.loading', 'Sending...') : t('auth.get_reset_link', 'Get Reset Link')}
               </button>
             </div>
             <div className="text-center">
@@ -153,7 +155,7 @@ export default function Login() {
                 }}
                 className="text-sm font-medium text-[#059669] hover:text-[#047857]"
               >
-                Back to Sign in
+                {t('auth.back_to_login', 'Back to Sign in')}
               </button>
             </div>
           </form>
@@ -167,12 +169,12 @@ export default function Login() {
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Welcome back
+            {t('auth.welcome_back', 'Welcome back')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            {t('auth.or', 'Or')}{' '}
             <Link to="/register" className="font-medium text-[#059669] hover:text-[#047857]">
-              create a new account
+              {t('auth.create_new_account', 'create a new account')}
             </Link>
           </p>
         </div>
@@ -189,7 +191,7 @@ export default function Login() {
                     to="/register" 
                     className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
                   >
-                    Create new Account
+                    {t('auth.create_new_account', 'Create new Account')}
                   </Link>
                 </div>
               )}
@@ -197,7 +199,7 @@ export default function Login() {
           )}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.email', 'Email address')}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail className="h-5 w-5 text-gray-400" />
@@ -214,7 +216,7 @@ export default function Login() {
             </div>
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <label className="block text-sm font-medium text-gray-700">{t('auth.password', 'Password')}</label>
                 <button 
                   type="button" 
                   onClick={() => {
@@ -223,7 +225,7 @@ export default function Login() {
                   }} 
                   className="text-sm font-medium text-[#059669] hover:text-[#047857]"
                 >
-                  Forgot Password?
+                  {t('auth.forgot_password', 'Forgot Password?')}
                 </button>
               </div>
               <div className="relative">
@@ -255,7 +257,7 @@ export default function Login() {
               disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-[#059669] hover:bg-[#047857] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#059669] disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? t('common.loading', 'Signing in...') : t('auth.login', 'Sign in')}
             </button>
           </div>
         </form>

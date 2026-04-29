@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-gray-900 text-gray-300 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,7 +25,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              Providing world-class healthcare with compassion and excellence. Your health is our top priority.
+              {t('footer.brand_desc', 'Providing world-class healthcare with compassion and excellence. Your health is our top priority.')}
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors"><Facebook className="h-5 w-5" /></a>
@@ -34,23 +37,23 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6">Quick Links</h3>
+            <h3 className="text-white font-semibold text-lg mb-6">{t('footer.quick_links', 'Quick Links')}</h3>
             <ul className="space-y-4">
-              <li><Link to="/about" className="hover:text-[#05c770] transition-colors">About Us</Link></li>
-              <li><Link to="/products" className="hover:text-[#05c770] transition-colors">Products</Link></li>
-              <li><Link to="/seminars" className="hover:text-[#05c770] transition-colors">Seminars</Link></li>
-              <li><Link to="/contact" className="hover:text-[#05c770] transition-colors">Book Appointment</Link></li>
-              <li><Link to="/contact" className="hover:text-[#05c770] transition-colors">Contact Us</Link></li>
+              <li><Link to="/about" className="hover:text-[#05c770] transition-colors">{t('footer.about_us', 'About Us')}</Link></li>
+              <li><Link to="/products" className="hover:text-[#05c770] transition-colors">{t('footer.products', 'Products')}</Link></li>
+              <li><Link to="/seminars" className="hover:text-[#05c770] transition-colors">{t('footer.seminars', 'Seminars')}</Link></li>
+              <li><Link to="/contact" className="hover:text-[#05c770] transition-colors">{t('footer.book_appointment', 'Book Appointment')}</Link></li>
+              <li><Link to="/contact" className="hover:text-[#05c770] transition-colors">{t('footer.contact_us', 'Contact Us')}</Link></li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-white font-semibold text-lg mb-6">Contact Us</h3>
+            <h3 className="text-white font-semibold text-lg mb-6">{t('footer.contact_us', 'Contact Us')}</h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-1" />
-                <span>1st Mega Center for Optimal Healthcare By LFD service</span>
+                <span>{t('footer.location', '1st Mega Center for Optimal Healthcare By LFD service')}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-emerald-500 flex-shrink-0" />
@@ -66,11 +69,11 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Optimal Healthcare. All rights reserved.
+            {t('footer.copyright', '&copy; {{year}} Optimal Healthcare. All rights reserved.', { year: new Date().getFullYear() })}
           </p>
           <div className="flex gap-6 text-sm text-gray-500">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.privacy', 'Privacy Policy')}</a>
+            <a href="#" className="hover:text-white transition-colors">{t('footer.terms', 'Terms of Service')}</a>
           </div>
         </div>
       </div>

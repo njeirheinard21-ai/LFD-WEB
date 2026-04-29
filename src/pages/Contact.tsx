@@ -1,7 +1,9 @@
 import { useState, FormEvent } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Contact() {
+  const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -32,9 +34,9 @@ export default function Contact() {
     <div className="bg-gray-50 min-h-screen pb-24">
       {/* Page Header */}
       <div className="bg-emerald-700 py-20 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Contact Us</h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{t('contact.title', 'Contact Us')}</h1>
         <p className="text-emerald-100 text-lg max-w-2xl mx-auto px-4">
-          We're here to help. Reach out to us for any inquiries, feedback, or assistance you may need.
+          {t('contact.subtitle')}
         </p>
       </div>
 
@@ -44,7 +46,7 @@ export default function Contact() {
           {/* Contact Information */}
           <div className="lg:col-span-1 space-y-8">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Get in Touch</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-6">{t('contact.get_in_touch', 'Get in Touch')}</h3>
               
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
@@ -52,8 +54,8 @@ export default function Contact() {
                     <MapPin className="h-6 w-6 text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Our Location</h4>
-                    <p className="text-gray-600 mt-1">1st Mega Center for Optimal Healthcare<br />By LFD service</p>
+                    <h4 className="font-semibold text-gray-900">{t('contact.our_location', 'Our Location')}</h4>
+                    <p className="text-gray-600 mt-1">{t('contact.location_desc', '1st Mega Center for Optimal Healthcare')}<br />By LFD service</p>
                   </div>
                 </div>
 
@@ -62,10 +64,10 @@ export default function Contact() {
                     <Phone className="h-6 w-6 text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Phone Numbers</h4>
+                    <h4 className="font-semibold text-gray-900">{t('contact.phone_numbers', 'Phone Numbers')}</h4>
                     <p className="text-gray-600 mt-1">
-                      Emergency: <a href="tel:+237674766946" className="text-emerald-600 font-medium hover:underline">+237 674 766 946</a><br />
-                      General: <a href="tel:+237653120158" className="hover:text-emerald-600 transition-colors">+237 653 120 158</a>
+                      {t('contact.emergency', 'Emergency')}: <a href="tel:+237674766946" className="text-emerald-600 font-medium hover:underline">+237 674 766 946</a><br />
+                      {t('contact.general', 'General')}: <a href="tel:+237653120158" className="hover:text-emerald-600 transition-colors">+237 653 120 158</a>
                     </p>
                   </div>
                 </div>
@@ -75,7 +77,7 @@ export default function Contact() {
                     <Mail className="h-6 w-6 text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Email Address</h4>
+                    <h4 className="font-semibold text-gray-900">{t('contact.email_address', 'Email Address')}</h4>
                     <p className="text-gray-600 mt-1">
                       <a href="mailto:info.lfdservice@gmail.com" className="hover:text-emerald-600 transition-colors">info.lfdservice@gmail.com</a>
                     </p>
@@ -87,10 +89,10 @@ export default function Contact() {
                     <Clock className="h-6 w-6 text-emerald-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Working Hours</h4>
+                    <h4 className="font-semibold text-gray-900">{t('contact.working_hours', 'Working Hours')}</h4>
                     <p className="text-gray-600 mt-1">
-                      Sun - Tue: Closed<br />
-                      Wed - Sat: 6:00 AM - 6:00 PM
+                      {t('contact.hours_sun_tue', 'Sun - Tue: Closed')}<br />
+                      {t('contact.hours_wed_sat', 'Wed - Sat: 6:00 AM - 6:00 PM')}
                     </p>
                   </div>
                 </div>
@@ -106,50 +108,50 @@ export default function Contact() {
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle2 className="h-10 w-10 text-emerald-600" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                  <p className="text-gray-600 mb-6">Thank you for reaching out. We will get back to you as soon as possible.</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('contact.msg_sent', 'Message Sent!')}</h3>
+                  <p className="text-gray-600 mb-6">{t('contact.msg_thanks', 'Thank you for reaching out. We will get back to you as soon as possible.')}</p>
                   <button 
                     onClick={() => setSubmitted(false)}
                     className="text-emerald-600 font-medium hover:underline"
                   >
-                    Send another message
+                    {t('contact.send_another', 'Send another message')}
                   </button>
                 </div>
               ) : (
                 <>
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Send us a Message</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">{t('contact.send_msg', 'Send us a Message')}</h3>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('contact.your_name', 'Your Name')}</label>
                         <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition-all" placeholder="John Doe" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('contact.your_email', 'Email Address')}</label>
                         <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition-all" placeholder="john@example.com" />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('contact.your_phone', 'Phone Number')}</label>
                         <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition-all" placeholder="+237 6XX XXX XXX" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">{t('contact.your_location', 'Location')}</label>
                         <input type="text" name="location" value={formData.location} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition-all" placeholder="City, Country" />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('contact.your_subject', 'Subject')}</label>
                       <input type="text" name="subject" value={formData.subject} onChange={handleChange} required className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition-all" placeholder="How can we help you?" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('contact.your_message', 'Message')}</label>
                       <textarea name="message" value={formData.message} onChange={handleChange} required rows={5} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-transparent outline-none transition-all" placeholder="Write your message here..."></textarea>
                     </div>
                     <button type="submit" className="inline-flex items-center justify-center gap-2 bg-emerald-600 text-white px-8 py-4 rounded-xl font-medium hover:bg-emerald-700 transition-colors w-full md:w-auto">
                       <Send className="h-5 w-5" />
-                      Send Message
+                      {t('contact.send_button', 'Send Message')}
                     </button>
                   </form>
                 </>
@@ -159,8 +161,8 @@ export default function Contact() {
             {/* Map Section */}
             <div className="bg-white rounded-2xl p-2 shadow-sm border border-gray-100 overflow-hidden relative flex flex-col">
               <div className="p-6 pb-4">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Our Location</h3>
-                <p className="text-gray-600 mb-4">1st Mega Center for Optimal Healthcare By LFD service</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{t('contact.our_location', 'Our Location')}</h3>
+                <p className="text-gray-600 mb-4">{t('contact.location_desc', '1st Mega Center for Optimal Healthcare')}</p>
                 <a 
                   href="https://maps.app.goo.gl/eALLSQ4UwnskjEsb6" 
                   target="_blank" 
@@ -168,7 +170,7 @@ export default function Contact() {
                   className="inline-flex items-center justify-center gap-2 bg-purple-50 text-purple-700 px-6 py-2.5 rounded-xl font-medium hover:bg-purple-100 transition-colors"
                 >
                   <MapPin className="h-4 w-4" />
-                  Open in Google Maps
+                  {t('contact.open_maps', 'Open in Google Maps')}
                 </a>
               </div>
               <div className="w-full h-[300px] md:h-[400px] rounded-xl overflow-hidden">

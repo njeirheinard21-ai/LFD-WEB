@@ -4,18 +4,21 @@ import { Menu, X, Calendar, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useAuth } from './AuthContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Products', path: '/products' },
-    { name: 'Seminars', path: '/seminars' },
-    { name: 'Contact', path: '/contact' },
+    { name: t('nav.home', 'Home'), path: '/' },
+    { name: t('nav.about', 'About Us'), path: '/about' },
+    { name: t('nav.products', 'Products'), path: '/products' },
+    { name: t('nav.seminars', 'Seminars'), path: '/seminars' },
+    { name: t('nav.contact', 'Contact'), path: '/contact' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -39,7 +42,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -63,7 +66,7 @@ export default function Navbar() {
                       isActive('/admin') ? "text-[#05c770]" : "text-gray-700"
                     )}
                   >
-                    Admin
+                    {t('nav.admin', 'Admin')}
                   </Link>
                 )}
                 <Link
@@ -73,7 +76,7 @@ export default function Navbar() {
                     isActive('/dashboard') ? "text-[#05c770]" : "text-gray-700"
                   )}
                 >
-                  <UserIcon className="h-4 w-4" /> Dashboard
+                  <UserIcon className="h-4 w-4" /> {t('nav.dashboard', 'Dashboard')}
                 </Link>
               </>
             ) : (
@@ -84,27 +87,32 @@ export default function Navbar() {
                   isActive('/login') ? "text-[#05c770]" : "text-gray-700"
                 )}
               >
-                Login
+                {t('nav.login', 'Login')}
               </Link>
             )}
 
+            <LanguageSwitcher />
+
             <Link
               to="/contact"
-              className="flex items-center gap-2 bg-[#059669] text-white px-6 py-2.5 rounded-full font-medium hover:bg-[#047857] transition-all shadow-sm hover:shadow-md active:scale-95"
+              className="flex items-center gap-2 bg-[#059669] text-white px-5 py-2.5 rounded-full font-medium hover:bg-[#047857] transition-all shadow-sm hover:shadow-md active:scale-95 text-sm whitespace-nowrap"
             >
               <Calendar className="h-4 w-4" />
-              Book Appointment
+              {t('nav.book_appointment', 'Book Appointment')}
             </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-gray-600 hover:text-[#05c770] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          {/* Mobile Menu Button - Also add LanguageSwitcher to mobile header */}
+          <div className="flex items-center gap-4 lg:hidden">
+            <LanguageSwitcher />
+            <button
+              className="p-2 text-gray-600 hover:text-[#05c770] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -147,7 +155,7 @@ export default function Navbar() {
                           : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                       )}
                     >
-                      Admin Dashboard
+                      {t('nav.admin', 'Admin Dashboard')}
                     </Link>
                   )}
                   <Link
@@ -160,7 +168,7 @@ export default function Navbar() {
                         : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                     )}
                   >
-                    <UserIcon className="h-5 w-5" /> Dashboard
+                    <UserIcon className="h-5 w-5" /> {t('nav.dashboard', 'Dashboard')}
                   </Link>
                 </>
               ) : (
@@ -174,7 +182,7 @@ export default function Navbar() {
                       : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                   )}
                 >
-                  Login
+                  {t('nav.login', 'Login')}
                 </Link>
               )}
 
@@ -185,7 +193,7 @@ export default function Navbar() {
                   className="flex items-center justify-center gap-2 w-full bg-[#059669] text-white px-6 py-3 rounded-full font-medium hover:bg-[#047857] transition-colors"
                 >
                   <Calendar className="h-5 w-5" />
-                  Book Appointment
+                  {t('nav.book_appointment', 'Book Appointment')}
                 </Link>
               </div>
             </div>

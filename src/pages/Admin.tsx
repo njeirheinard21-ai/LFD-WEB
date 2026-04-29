@@ -4,6 +4,7 @@ import { collection, updateDoc, doc, query, orderBy, onSnapshot, addDoc, deleteD
 import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { useAuth } from '../components/AuthContext';
 import { CheckCircle, AlertCircle, Clock, ShieldCheck, Search, X, Trash2, Users, UserPlus, ShieldAlert, Video, Radio, Settings, Activity, Globe, MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { PRICING, formatPrice } from '../lib/pricing';
 
 interface Subscription {
   id: string;
@@ -13,7 +14,7 @@ interface Subscription {
   phone: string;
   planType: 'weekly' | 'monthly' | 'yearly';
   amount: number;
-  paymentMethod: 'momo' | 'om';
+  paymentMethod: 'momo' | 'om' | 'cash';
   status: 'pending' | 'active' | 'expired' | 'key_generated';
   createdAt: string;
   startDate?: string;
@@ -557,11 +558,13 @@ export default function Admin() {
                                 }`}>
                                   {sub.planType}
                                 </span>
-                                <div className="text-xs text-gray-500 mt-1">{sub.amount.toLocaleString()} XAF</div>
+                                <div className="text-xs text-gray-500 mt-1">{formatPrice(PRICING[sub.planType]?.amount || sub.amount)}</div>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase ${
-                                  sub.paymentMethod === 'momo' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'
+                                  sub.paymentMethod === 'momo' ? 'bg-yellow-100 text-yellow-800' : 
+                                  sub.paymentMethod === 'om' ? 'bg-orange-100 text-orange-800' : 
+                                  'bg-emerald-100 text-emerald-800'
                                 }`}>
                                   {sub.paymentMethod}
                                 </span>
@@ -762,12 +765,14 @@ export default function Admin() {
                             }`}>
                               {sub.planType}
                             </span>
-                            <div className="text-xs text-gray-900 font-bold mt-1">{sub.amount.toLocaleString()} XAF</div>
+                            <div className="text-xs text-gray-900 font-bold mt-1">{formatPrice(PRICING[sub.planType]?.amount || sub.amount)}</div>
                           </div>
                           <div>
                             <div className="text-[10px] uppercase font-bold text-gray-400 mb-1">Payment</div>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              sub.paymentMethod === 'momo' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'
+                              sub.paymentMethod === 'momo' ? 'bg-yellow-100 text-yellow-800' : 
+                              sub.paymentMethod === 'om' ? 'bg-orange-100 text-orange-800' : 
+                              'bg-emerald-100 text-emerald-800'
                             }`}>
                               {sub.paymentMethod}
                             </span>

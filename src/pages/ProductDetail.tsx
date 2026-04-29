@@ -2,10 +2,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, ShieldCheck, Leaf, MessageCircle, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { products } from '../data/products';
+import { useTranslation } from 'react-i18next';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const WHATSAPP_NUMBER = "237695821095"; // Replace with actual WhatsApp number
 
   const product = products.find(p => p.id === Number(id));
@@ -13,13 +15,13 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center bg-gray-50 px-4">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
-        <p className="text-gray-600 mb-8">The product you are looking for does not exist or has been removed.</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('products.not_found', 'Product Not Found')}</h2>
+        <p className="text-gray-600 mb-8">{t('products.not_found_desc', 'The product you are looking for does not exist or has been removed.')}</p>
         <button 
           onClick={() => navigate('/products')}
           className="bg-[#059669] text-white px-6 py-3 rounded-full font-bold hover:bg-[#047857] transition-colors"
         >
-          Back to Products
+          {t('products.back', 'Back to Products')}
         </button>
       </div>
     );
@@ -39,7 +41,7 @@ export default function ProductDetail() {
           to="/products" 
           className="inline-flex items-center gap-2 text-gray-600 hover:text-[#059669] font-medium mb-8 transition-colors"
         >
-          <ArrowLeft className="h-5 w-5" /> Back to all products
+          <ArrowLeft className="h-5 w-5" /> {t('products.back_to_all', 'Back to all products')}
         </Link>
 
         <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
@@ -54,7 +56,7 @@ export default function ProductDetail() {
               />
               {product.rating >= 4.9 && (
                 <div className="absolute top-6 left-6 bg-yellow-400 text-yellow-900 text-sm font-bold px-4 py-1.5 rounded-full shadow-md">
-                  Best Seller
+                  {t('products.best_seller', 'Best Seller')}
                 </div>
               )}
             </div>
@@ -72,7 +74,7 @@ export default function ProductDetail() {
                   </span>
                   <div className="flex items-center gap-1 text-sm font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    {product.rating} ({product.reviews} reviews)
+                    {product.rating} ({product.reviews} {t('products.reviews', 'reviews')})
                   </div>
                 </div>
 
@@ -92,15 +94,15 @@ export default function ProductDetail() {
                 <div className="space-y-4 mb-10">
                   <div className="flex items-center gap-3 text-gray-700">
                     <CheckCircle className="h-5 w-5 text-[#059669]" />
-                    <span className="font-medium">100% Natural Ingredients</span>
+                    <span className="font-medium">{t('products.ingredients', '100% Natural Ingredients')}</span>
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
                     <CheckCircle className="h-5 w-5 text-[#059669]" />
-                    <span className="font-medium">Clinically Tested & Approved</span>
+                    <span className="font-medium">{t('products.tested', 'Clinically Tested & Approved')}</span>
                   </div>
                   <div className="flex items-center gap-3 text-gray-700">
                     <CheckCircle className="h-5 w-5 text-[#059669]" />
-                    <span className="font-medium">Premium Quality Guarantee</span>
+                    <span className="font-medium">{t('products.guarantee', 'Premium Quality Guarantee')}</span>
                   </div>
                 </div>
 
@@ -113,12 +115,12 @@ export default function ProductDetail() {
                     className="flex-1 flex justify-center items-center gap-2 bg-[#25D366] text-white font-bold px-8 py-4 rounded-xl hover:bg-[#128C7E] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 min-h-[56px] text-lg"
                   >
                     <MessageCircle className="h-6 w-6" />
-                    Order on WhatsApp
+                    {t('products.order_whatsapp', 'Order on WhatsApp')}
                   </a>
                 </div>
                 
                 <p className="text-sm text-gray-500 mt-6 text-center sm:text-left">
-                  * For pricing and delivery details, please contact us directly via WhatsApp. Our team responds within minutes.
+                  {t('products.whatsapp_disclaimer', '* For pricing and delivery details, please contact us directly via WhatsApp. Our team responds within minutes.')}
                 </p>
               </motion.div>
             </div>
@@ -131,22 +133,22 @@ export default function ProductDetail() {
             <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Leaf className="h-6 w-6 text-[#059669]" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2">100% Organic</h3>
-            <p className="text-gray-600 text-sm">Sourced from the finest natural ingredients without harmful chemicals.</p>
+            <h3 className="font-bold text-gray-900 mb-2">{t('products.organic', '100% Organic')}</h3>
+            <p className="text-gray-600 text-sm">{t('products.organic_desc', 'Sourced from the finest natural ingredients without harmful chemicals.')}</p>
           </div>
           <div className="bg-white p-6 rounded-2xl text-center shadow-sm border border-gray-100">
             <div className="w-12 h-12 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldCheck className="h-6 w-6 text-[#8B5CF6]" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2">Clinically Tested</h3>
-            <p className="text-gray-600 text-sm">Rigorously tested to ensure safety, efficacy, and premium quality.</p>
+            <h3 className="font-bold text-gray-900 mb-2">{t('products.clinically_tested', 'Clinically Tested')}</h3>
+            <p className="text-gray-600 text-sm">{t('products.tested_desc', 'Rigorously tested to ensure safety, efficacy, and premium quality.')}</p>
           </div>
           <div className="bg-white p-6 rounded-2xl text-center shadow-sm border border-gray-100">
             <div className="w-12 h-12 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Star className="h-6 w-6 text-yellow-500" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2">Highly Rated</h3>
-            <p className="text-gray-600 text-sm">Trusted by thousands of customers for their daily wellness routines.</p>
+            <h3 className="font-bold text-gray-900 mb-2">{t('products.highly_rated', 'Highly Rated')}</h3>
+            <p className="text-gray-600 text-sm">{t('products.rated_desc', 'Trusted by thousands of customers for their daily wellness routines.')}</p>
           </div>
         </div>
 

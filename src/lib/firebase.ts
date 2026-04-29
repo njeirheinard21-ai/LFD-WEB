@@ -7,7 +7,7 @@ import firebaseConfig from '../../firebase-applet-config.json';
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true
+  localCache: undefined // Try using default cache instead of long polling
 }, firebaseConfig.firestoreDatabaseId || '(default)');
 
 // TEMP debug code as requested

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
 import { mockBackend } from '../lib/mockBackend';
 import { CreditCard, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { PRICING, formatPrice } from '../lib/pricing';
 
 export default function Checkout() {
   const location = useLocation();
@@ -43,8 +44,8 @@ export default function Checkout() {
 
   if (!user || (planType !== 'weekly' && planType !== 'monthly' && planType !== 'yearly')) return null;
 
-  const price = planType === 'weekly' ? '3,000 XAF' : planType === 'monthly' ? '10,000 XAF' : '100,000 XAF';
-  const planName = planType === 'weekly' ? 'Weekly Plan' : planType === 'monthly' ? 'Monthly Plan' : 'Yearly Plan';
+  const price = formatPrice(PRICING[planType].amount);
+  const planName = PRICING[planType].name + ' Plan';
 
   if (success) {
     return (

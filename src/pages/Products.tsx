@@ -3,16 +3,18 @@ import { ShoppingBag, MessageCircle, Star, ShieldCheck, Leaf, ArrowRight } from 
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { products } from '../data/products';
+import { useTranslation } from 'react-i18next';
 
 export default function Products() {
+  const { t } = useTranslation();
   const WHATSAPP_NUMBER = "237695821095"; // Replace with actual WhatsApp number
 
-  const categories = ['All', 'Nutrition', 'Wellness', 'Beverage', 'Skincare', 'Skincare & Nutrition'];
-  const [activeCategory, setActiveCategory] = useState('All');
+  const categories = [t('products.all', 'All'), 'Nutrition', 'Wellness', 'Beverage', 'Skincare', 'Skincare & Nutrition'];
+  const [activeCategory, setActiveCategory] = useState(t('products.all', 'All'));
 
-  const filteredProducts = activeCategory === 'All' 
+  const filteredProducts = activeCategory === t('products.all', 'All') 
     ? products 
-    : products.filter(p => p.category === activeCategory);
+    : products.filter(p => p.category === activeCategory || (p.category === 'All' && activeCategory === t('products.all', 'All')));
 
   const getWhatsAppLink = (productName: string) => {
     const message = `Hello, I would like to order ${productName} from Optimal Healthcare. Please provide more details.`;
@@ -31,20 +33,20 @@ export default function Products() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full font-semibold text-sm mb-6">
-              <Leaf className="h-4 w-4" /> 100% Natural Ingredients
+              <Leaf className="h-4 w-4" /> {t('products.natural_ingredients', '100% Natural Ingredients')}
             </span>
             <h1 className="text-[clamp(2.5rem,4vw,4rem)] font-bold text-gray-900 mb-6 leading-tight">
-              Our Health <span className="text-[#05c770]">Products</span>
+              {t('products.title_part1', 'Our Health ')}<span className="text-[#05c770]">{t('products.title_part2', 'Products')}</span>
             </h1>
             <p className="text-gray-600 text-lg lg:text-xl mb-10 max-w-2xl mx-auto">
-              Natural, safe, and effective products carefully formulated to support your journey to optimal health and vitality.
+              {t('products.subtitle', 'Natural, safe, and effective products carefully formulated to support your journey to optimal health and vitality.')}
             </p>
             <a 
               href="#products" 
               className="inline-flex justify-center items-center gap-2 bg-[#059669] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-[#047857] transition-all shadow-lg hover:shadow-xl min-h-[44px]"
             >
               <ShoppingBag className="h-5 w-5" />
-              Shop Now
+              {t('products.shop_now', 'Shop Now')}
             </a>
           </motion.div>
         </div>
@@ -54,9 +56,9 @@ export default function Products() {
       <section className="bg-white py-8 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center gap-8 md:gap-16 text-gray-600 font-medium">
-            <div className="flex items-center gap-2"><ShieldCheck className="h-6 w-6 text-[#05c770]" /> Clinically Tested</div>
-            <div className="flex items-center gap-2"><Leaf className="h-6 w-6 text-[#05c770]" /> 100% Organic</div>
-            <div className="flex items-center gap-2"><Star className="h-6 w-6 text-yellow-400" /> Premium Quality</div>
+            <div className="flex items-center gap-2"><ShieldCheck className="h-6 w-6 text-[#05c770]" /> {t('products.clinically_tested', 'Clinically Tested')}</div>
+            <div className="flex items-center gap-2"><Leaf className="h-6 w-6 text-[#05c770]" /> {t('products.organic', '100% Organic')}</div>
+            <div className="flex items-center gap-2"><Star className="h-6 w-6 text-yellow-400" /> {t('products.premium_quality', 'Premium Quality')}</div>
           </div>
         </div>
       </section>
@@ -101,7 +103,7 @@ export default function Products() {
                   />
                   {product.rating >= 4.9 && (
                     <div className="absolute top-4 left-4 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                      Best Seller
+                      {t('products.best_seller', 'Best Seller')}
                     </div>
                   )}
                 </div>
@@ -125,7 +127,7 @@ export default function Products() {
                       to={`/products/${product.id}`}
                       className="w-full flex justify-center items-center gap-2 bg-white text-[#8B5CF6] border border-[#8B5CF6] font-bold px-5 py-2.5 rounded-xl hover:bg-[#8B5CF6] hover:text-white transition-colors min-h-[44px]"
                     >
-                      View Details <ArrowRight className="h-4 w-4" />
+                      {t('products.view_details', 'View Details')} <ArrowRight className="h-4 w-4" />
                     </Link>
                     
                     <a 
@@ -135,7 +137,7 @@ export default function Products() {
                       className="w-full flex justify-center items-center gap-2 bg-[#25D366] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#128C7E] transition-colors shadow-sm hover:shadow-md min-h-[44px]"
                     >
                       <MessageCircle className="h-5 w-5" />
-                      Order on WhatsApp
+                      {t('products.order_whatsapp', 'Order on WhatsApp')}
                     </a>
                   </div>
                 </div>
