@@ -29,16 +29,17 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group py-2">
+          <Link to="/" className="flex items-center gap-2 group py-2 flex-shrink-0">
             <img 
               src="https://i.imgur.com/dXhMYcs.png" 
               alt="Optimal Healthcare" 
-              className="h-12 w-12 object-contain transition-transform group-hover:scale-105"
+              className="h-10 w-10 sm:h-12 sm:w-12 object-contain transition-transform group-hover:scale-105"
               referrerPolicy="no-referrer"
             />
-            <span className="text-xl sm:text-2xl font-bold tracking-tight font-sans">
-              <span className="text-[#05c770]">Optimal</span> <span className="text-[#8B5CF6]">Health Care</span>
-            </span>
+            <div className="flex items-center gap-1 sm:gap-2 leading-none sm:leading-normal">
+              <span className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-[#05c770]">Optimal</span>
+              <span className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-[#8B5CF6]">Health Care</span>
+            </div>
           </Link>
 
           {/* Desktop Nav */}
@@ -102,11 +103,10 @@ export default function Navbar() {
             </Link>
           </nav>
 
-          {/* Mobile Menu Button - Also add LanguageSwitcher to mobile header */}
-          <div className="flex items-center gap-4 lg:hidden">
-            <LanguageSwitcher />
+          {/* Mobile Menu Button */}
+          <div className="flex lg:hidden">
             <button
-              className="p-2 text-gray-600 hover:text-[#05c770] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 -mr-2 text-gray-600 hover:text-[#05c770] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-gray-50 border border-transparent active:border-emerald-100"
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
@@ -123,18 +123,24 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white border-t border-gray-100 overflow-hidden"
+            className="lg:hidden bg-white border-t border-gray-100 overflow-hidden shadow-xl"
           >
-            <div className="px-4 pt-2 pb-6 space-y-1">
+            <div className="px-4 pt-4 pb-8 space-y-2">
+              {/* Mobile Language Switcher */}
+              <div className="px-3 pb-4 mb-4 border-b border-gray-50 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-500">{t('nav.language', 'Language')}</span>
+                <LanguageSwitcher />
+              </div>
+
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "block px-3 py-3 rounded-md text-base font-medium",
+                    "flex items-center px-4 py-3 rounded-xl text-base font-semibold transition-all",
                     isActive(link.path)
-                      ? "bg-green-50 text-[#05c770]"
+                      ? "bg-emerald-50 text-[#05c770]"
                       : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                   )}
                 >
@@ -149,9 +155,9 @@ export default function Navbar() {
                       to="/admin"
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "block px-3 py-3 rounded-md text-base font-medium flex items-center gap-2",
+                        "flex items-center px-4 py-3 rounded-xl text-base font-semibold transition-all",
                         isActive('/admin')
-                          ? "bg-green-50 text-[#05c770]"
+                          ? "bg-emerald-50 text-[#05c770]"
                           : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                       )}
                     >
@@ -162,9 +168,9 @@ export default function Navbar() {
                     to="/dashboard"
                     onClick={() => setIsOpen(false)}
                     className={cn(
-                      "block px-3 py-3 rounded-md text-base font-medium flex items-center gap-2",
+                      "flex items-center gap-2 px-4 py-3 rounded-xl text-base font-semibold transition-all",
                       isActive('/dashboard')
-                        ? "bg-green-50 text-[#05c770]"
+                        ? "bg-emerald-50 text-[#05c770]"
                         : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                     )}
                   >
@@ -176,9 +182,9 @@ export default function Navbar() {
                   to="/login"
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "block px-3 py-3 rounded-md text-base font-medium",
+                    "flex items-center px-4 py-3 rounded-xl text-base font-semibold transition-all",
                     isActive('/login')
-                      ? "bg-green-50 text-[#05c770]"
+                      ? "bg-emerald-50 text-[#05c770]"
                       : "text-gray-700 hover:bg-gray-50 hover:text-[#05c770]"
                   )}
                 >

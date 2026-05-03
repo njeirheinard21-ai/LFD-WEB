@@ -9,7 +9,8 @@
     "admin": "Admin",
     "login": "Connexion",
     "logout": "Déconnexion",
-    "book_appointment": "Prendre Rendez-vous"
+    "book_appointment": "Prendre Rendez-vous",
+    "language": "Langue"
   },
   "footer": {
     "brand_desc": "Fournir des soins de santé de classe mondiale avec compassion et excellence. Votre santé est notre priorité absolue.",

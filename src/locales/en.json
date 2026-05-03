@@ -9,7 +9,8 @@
     "admin": "Admin",
     "login": "Login",
     "logout": "Logout",
-    "book_appointment": "Book Appointment"
+    "book_appointment": "Book Appointment",
+    "language": "Language"
   },
   "footer": {
     "brand_desc": "Providing world-class healthcare with compassion and excellence. Your health is our top priority.",

@@ -4,7 +4,7 @@ import { PlayCircle, Lock, AlertCircle, ShieldCheck, ArrowRight, VideoOff, Radio
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { collection, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
-import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { db, handleFirestoreError } from '../lib/firebase';
 import { PricingSection } from '../components/PricingSection';
 import { useTranslation } from 'react-i18next';
 
@@ -38,7 +38,7 @@ export default function LiveSeminars() {
     }
     controlsTimeoutRef.current = setTimeout(() => {
       setShowControls(false);
-    }, 3000);
+    }, 6000);
   };
 
   useEffect(() => {
@@ -51,38 +51,30 @@ export default function LiveSeminars() {
   }, []);
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+    const handleTouch = () => {
+      resetControlsTimeout();
     };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    
+    const handleWindowBlur = () => {
+      if (document.activeElement?.tagName === 'IFRAME') {
+        resetControlsTimeout();
+        setTimeout(() => {
+          window.focus();
+        }, 100);
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouch);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouch);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
   }, []);
 
-  const toggleFullscreen = async () => {
-    if (!document.fullscreenElement) {
-      if (videoContainerRef.current?.requestFullscreen) {
-        await videoContainerRef.current.requestFullscreen();
-        try {
-          const orientation = screen.orientation as any;
-          if (orientation && orientation.lock) {
-            await orientation.lock('landscape');
-          }
-        } catch (err) {
-          console.log('Orientation lock failed', err);
-        }
-      }
-    } else {
-      if (document.exitFullscreen) {
-        await document.exitFullscreen();
-        try {
-          if (screen.orientation && screen.orientation.unlock) {
-            screen.orientation.unlock();
-          }
-        } catch (err) {
-          console.log('Orientation unlock failed', err);
-        }
-      }
-    }
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   useEffect(() => {
@@ -212,56 +204,75 @@ export default function LiveSeminars() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-700">
             <div className="lg:col-span-2 space-y-6">
               <div id="seminarContent" className="bg-white p-2 rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden">
-                <div className="aspect-video bg-gray-900 rounded-[1.5rem] flex flex-col items-center justify-center relative overflow-hidden">
-                  {/* Live badge removed as requested */}
+                <div className={`bg-black flex flex-col items-center justify-center relative overflow-hidden transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[9999] w-screen h-screen rounded-none' : 'aspect-video rounded-[1.5rem] w-full'}`} ref={videoContainerRef}>
                   {getYouTubeId(liveStream.streamUrl) ? (
                     <div 
-                      ref={videoContainerRef}
-                      className="relative w-full h-full video-container select-none bg-black group" 
+                      className="relative w-full h-full select-none bg-black group" 
                       onContextMenu={(e) => e.preventDefault()}
+                      onDragStart={(e) => e.preventDefault()}
+                      style={{ WebkitUserSelect: 'none', userSelect: 'none', WebkitTouchCallout: 'none' }}
                       onMouseMove={resetControlsTimeout}
                       onTouchStart={resetControlsTimeout}
-                      onMouseEnter={() => setShowControls(true)}
+                      onMouseEnter={resetControlsTimeout}
                       onMouseLeave={() => setShowControls(false)}
+                      onClick={resetControlsTimeout}
                     >
-                      {/* Top overlay to block title, share, and watch later */}
+                      {/* Transparent full overlay click shield (Optional, disabled pointer-events-auto to allow center play/pause clicking) */}
+                      <div className="absolute inset-0 z-10 pointer-events-none" />
+
+                      {/* Bottom-left overlay (blocks "Watch on YouTube"/Copy Link and native play but controls=1 center acts as play) */}
                       <div 
-                        className="absolute top-0 left-0 w-full h-[15%] sm:h-[100px] z-20 bg-transparent cursor-default" 
+                        className="absolute bottom-0 left-0 w-[150px] h-[60px] z-40 bg-transparent cursor-default pointer-events-auto"
                         onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
                       />
-                      {/* Bottom-left overlay to block 'Watch on YouTube' and 'Copy link' */}
+
+                      {/* Bottom-right overlay (blocks YouTube logo) */}
                       <div 
-                        className="absolute bottom-0 left-0 w-[60%] sm:w-[350px] h-[25%] sm:h-[100px] z-20 bg-transparent cursor-default" 
+                        className="absolute bottom-0 right-[48px] w-[130px] h-[60px] z-40 bg-transparent cursor-default pointer-events-auto"
                         onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
                       />
-                      {/* Bottom-right overlay to block YouTube logo */}
+                      
+                      {/* Top-right overlay (blocks Share/Copy Link button) */}
                       <div 
-                        className="absolute bottom-0 right-0 w-[30%] sm:w-[150px] h-[20%] sm:h-[80px] z-20 bg-transparent cursor-default" 
+                        className="absolute top-0 right-0 w-[120px] h-[80px] z-40 bg-transparent cursor-default pointer-events-auto"
                         onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
                       />
+                      
+                      {/* Top-left overlay (blocks title/avatar which can link to YouTube) */}
+                      <div 
+                        className="absolute top-0 left-0 w-[80%] h-[80px] z-40 bg-transparent cursor-default pointer-events-auto"
+                        onContextMenu={(e) => e.preventDefault()}
+                        onDragStart={(e) => e.preventDefault()}
+                      />
+
+                      {/* Secure YouTube Iframe Embed */}
                       <iframe 
-                        width="100%" 
-                        height="100%"
-                        src={`https://www.youtube.com/embed/${getYouTubeId(liveStream.streamUrl)}?autoplay=1&mute=0&rel=0&modestbranding=1&controls=1&disablekb=1&fs=1`} 
+                        className="w-full h-full z-0 relative pointer-events-auto"
+                        src={`https://www.youtube.com/embed/${getYouTubeId(liveStream.streamUrl)}?modestbranding=1&rel=0&controls=1&disablekb=1&fs=1&iv_load_policy=3`}
                         title={liveStream.title}
-                        className="w-full h-full pointer-events-auto"
                         frameBorder="0"
                         sandbox="allow-scripts allow-same-origin allow-presentation"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowFullScreen
-                      ></iframe>
+                      />
                       
+                      {/* Custom UI Controls for Fullscreen (Placed exactly over the native YouTube Fullscreen Button) */}
                       <AnimatePresence>
                         {showControls && (
                           <motion.button 
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            onClick={toggleFullscreen} 
-                            className="absolute bottom-14 right-4 z-30 bg-black/60 text-white p-1.5 rounded-md hover:bg-black/80 transition-all backdrop-blur-md border-none shadow-lg"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFullscreen();
+                            }} 
+                            className="absolute bottom-0 right-0 w-[65px] h-[52px] z-[60] bg-[#0f0f0f] text-white flex items-center justify-center pointer-events-auto hover:text-green-400 focus:outline-none transition-colors border-l border-t border-white/5 rounded-tl-md shadow-2xl"
                             aria-label="Toggle Fullscreen"
+                            title="Fullscreen"
                           >
-                            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                            {isFullscreen ? <Minimize strokeWidth={2.5} className="w-[22px] h-[22px] -ml-1 -mt-1" /> : <Maximize strokeWidth={2.5} className="w-[22px] h-[22px] -ml-1 -mt-1" />}
                           </motion.button>
                         )}
                       </AnimatePresence>
