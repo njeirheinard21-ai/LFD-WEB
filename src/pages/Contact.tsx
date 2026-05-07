@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
 
 export default function Contact() {
   const { t } = useTranslation();
@@ -32,6 +33,11 @@ export default function Contact() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-24">
+      <SEO 
+        title="Contact Optimal Healthcare"
+        description="Get in touch with 1st Maga Center for Optimal Healthcare. Book an appointment, ask about our living food and drinks, or find our location."
+        url="https://lfdservice.org/contact"
+      />
       {/* Page Header */}
       <div className="bg-emerald-700 py-20 text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{t('contact.title', 'Contact Us')}</h1>

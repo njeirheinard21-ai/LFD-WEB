@@ -8,6 +8,7 @@ import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage 
 import { PricingSection } from '../components/PricingSection';
 import { PRICING, formatPrice } from '../lib/pricing';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
 
 interface LiveStream {
   isLive: boolean;
@@ -35,8 +36,10 @@ export default function Seminars() {
   const [modalError, setModalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveStream, setLiveStream] = useState<LiveStream | null>(null);
+  const [pastSeminars, setPastSeminars] = useState<any[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [playingVideoId, setPlayingVideoId] = useState<string | number | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -114,57 +117,37 @@ export default function Seminars() {
       console.error(">>> fetchLiveStream FAILED:", err);
     });
 
-    return () => unsubscribeStream();
+    // Fetch Past Seminars once, cache if possible
+    const fetchPastSeminars = async () => {
+      try {
+        const pastSeminarsQ = query(collection(db, 'pastSeminars'));
+        const snapshot = await getDocs(pastSeminarsQ);
+        const dbSeminars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        dbSeminars.sort((a: any, b: any) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
+        setPastSeminars(dbSeminars);
+      } catch (err) {
+        console.error(">>> fetchPastSeminars FAILED:", err);
+      }
+    };
+    fetchPastSeminars();
+
+    return () => {
+      unsubscribeStream();
+    };
   }, []);
 
   const getYouTubeId = (url: string) => {
+    if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|live\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const seminars = [
-    {
-      id: 1,
-      title: 'Diabetes Management Masterclass',
-      category: 'Chronic Disease Management',
-      description: 'Learn comprehensive strategies to manage blood sugar levels through diet, exercise, and medication.',
-      duration: '2 Hours',
-      trainer: 'Dr. Sarah Jenkins',
-      image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=2070&auto=format&fit=crop',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' // Placeholder
-    },
-    {
-      id: 2,
-      title: 'Heart Health & Nutrition',
-      category: 'Nutrition & Lifestyle',
-      description: 'Discover the best dietary practices and lifestyle changes to maintain optimal cardiovascular health.',
-      duration: '1.5 Hours',
-      trainer: 'Dr. Michael Chang',
-      image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=2053&auto=format&fit=crop',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    },
-    {
-      id: 3,
-      title: 'Stress & Anxiety Relief Workshop',
-      category: 'Mental Health & Wellness',
-      description: 'Practical techniques and mindfulness exercises to effectively manage daily stress and anxiety.',
-      duration: '3 Hours',
-      trainer: 'Dr. Emily Rodriguez',
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2020&auto=format&fit=crop',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    },
-    {
-      id: 4,
-      title: 'Preventive Healthcare Basics',
-      category: 'Preventive Healthcare',
-      description: 'Understand the fundamentals of preventive care, screenings, and early detection of common illnesses.',
-      duration: '1 Hour',
-      trainer: 'Dr. James Wilson',
-      image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=2000&auto=format&fit=crop',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  ];
+  const defaultSeminars: any[] = [];
 
   const faqs = [
     {
@@ -180,6 +163,8 @@ export default function Seminars() {
       answer: 'Yes! We add new masterclasses and workshops every month, covering the latest in health, nutrition, and preventive care.'
     }
   ];
+
+  const displaySeminars = pastSeminars.length > 0 ? pastSeminars : defaultSeminars;
 
   const handleSubscribe = (plan: 'weekly' | 'monthly' | 'yearly') => {
     setSelectedPlan(plan);
@@ -335,6 +320,11 @@ export default function Seminars() {
 
   return (
     <div className="bg-white relative">
+      <SEO 
+        title="Wellness Seminars & Live Training"
+        description="Join our optimal healthcare seminars and live training sessions. Access past seminars and premium content."
+        url="https://lfdservice.org/seminars"
+      />
       {/* Modal Overlay */}
       <AnimatePresence>
         {isModalOpen && (
@@ -723,72 +713,44 @@ export default function Seminars() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 p-12 md:p-20 text-center max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
-                    <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
-                      <VideoOff className="h-12 w-12 text-gray-300" />
+                  <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 p-12 md:p-20 text-center max-w-3xl mx-auto animate-in fade-in zoom-in duration-500 overflow-hidden relative">
+                    {liveStream?.thumbnailUrl && (
+                      <div className="absolute inset-0 z-0">
+                        <img src={liveStream.thumbnailUrl} alt="Live Stream Thumbnail" referrerPolicy="no-referrer" loading="lazy" className="w-full h-full object-cover opacity-20 filter blur-sm" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+                      </div>
+                    )}
+                    
+                    <div className="relative z-10">
+                      {liveStream?.thumbnailUrl ? (
+                        <div className="w-full max-w-md mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl mb-8 relative border-4 border-white">
+                          <img src={liveStream.thumbnailUrl} alt="Thumbnail" referrerPolicy="no-referrer" loading="lazy" className="w-full h-full object-cover" />
+                          <div className="absolute top-4 left-4 bg-black/70 backdrop-blur text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2">
+                            <VideoOff className="w-4 h-4" /> Offline
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                          <VideoOff className="h-12 w-12 text-gray-300" />
+                        </div>
+                      )}
+                      <h2 className="text-3xl font-bold text-gray-900 mb-4">No Live Seminar Running</h2>
+                      <p className="text-gray-600 text-lg mb-10 leading-relaxed max-w-xl mx-auto">
+                        There are currently no live sessions in progress. Check the schedule or your email for upcoming seminar announcements.
+                      </p>
+                      <a 
+                        href="#past-seminars"
+                        className="inline-flex items-center gap-2 bg-[#059669] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#047857] transition-all shadow-lg"
+                      >
+                        Browse Past Seminars <ArrowRight className="h-5 w-5" />
+                      </a>
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">No Live Seminar Running</h2>
-                    <p className="text-gray-600 text-lg mb-10 leading-relaxed">
-                      There are currently no live sessions in progress. Check the schedule or your email for upcoming seminar announcements.
-                    </p>
-                    <a 
-                      href="#past-seminars"
-                      className="inline-flex items-center gap-2 bg-[#059669] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#047857] transition-all shadow-lg"
-                    >
-                      Browse Past Seminars <ArrowRight className="h-5 w-5" />
-                    </a>
                   </div>
                 )}
               </div>
-
-              {/* PAST SEMINARS SECTION */}
-              <div id="past-seminars" className="mb-12 flex justify-between items-end pt-12 border-t border-gray-200">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">Past Seminars Library</h2>
-                  <p className="text-gray-600">You have full access to all premium recorded content.</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {seminars.map((seminar, index) => (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    key={seminar.id} 
-                    className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 flex flex-col"
-                  >
-                    <div className="relative h-64 bg-gray-900 group cursor-pointer">
-                      <img src={seminar.image} alt={seminar.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <PlayCircle className="h-16 w-16 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
-                      </div>
-                    </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <div className="mb-4">
-                        <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">{seminar.category}</span>
-                        <h3 className="text-xl font-bold text-gray-900 mt-2">{seminar.title}</h3>
-                      </div>
-                      <p className="text-gray-600 mb-6 flex-grow">{seminar.description}</p>
-                      
-                      <div className="flex items-center gap-6 pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <Clock className="h-4 w-4 text-[#059669]" />
-                          <span className="font-medium">{seminar.duration}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <User className="h-4 w-4 text-[#059669]" />
-                          <span className="font-medium">{seminar.trainer}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
             </>
           ) : (
-            <div className="text-center max-w-3xl mx-auto">
+            <div className="text-center max-w-3xl mx-auto mb-16">
               {user && subscription?.status === 'expired' ? (
                 <div className="bg-orange-50 border border-orange-200 rounded-2xl p-8 mb-12">
                   <Lock className="h-12 w-12 text-orange-500 mx-auto mb-4" />
@@ -807,6 +769,121 @@ export default function Seminars() {
               )}
             </div>
           )}
+
+          {/* PAST SEMINARS SECTION (Visible to everyone, playback restricted) */}
+          <div id="past-seminars" className="mb-12 flex justify-between items-end pt-12 border-t border-gray-200">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Past Seminars Library</h2>
+              <p className="text-gray-600">You have full access to all premium recorded content.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {displaySeminars.length === 0 ? (
+              <div className="col-span-1 md:col-span-2 bg-white rounded-2xl p-12 text-center border border-gray-200">
+                <VideoOff className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-gray-900">No Past Seminars</h3>
+                <p className="text-gray-500 mt-1">There are no past seminar videos available yet.</p>
+              </div>
+            ) : (
+              displaySeminars.map((seminar, index) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  key={seminar.id} 
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 flex flex-col"
+                >
+                <div className="relative h-64 bg-gray-900">
+                  {playingVideoId === seminar.id && getYouTubeId(seminar.videoUrl) ? (
+                    <>
+                      <iframe 
+                        width="100%" 
+                        height="100%"
+                        src={`https://www.youtube.com/embed/${getYouTubeId(seminar.videoUrl)}?autoplay=1&mute=0&rel=0&modestbranding=1`}
+                        title={seminar.title}
+                        className={`w-full h-full pointer-events-auto relative z-0`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                      ></iframe>
+                      
+                      {!hasAccess ? (
+                        <>
+                          <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center cursor-not-allowed">
+                            <Lock className="w-10 h-10 text-white/50 mb-3" />
+                            <p className="text-white font-bold tracking-wide">Access Restricted</p>
+                            <p className="text-white/80 text-sm mt-1 max-w-[80%] text-center mb-4">Activate your subscription to watch this seminar</p>
+                            <a href="#pricing" onClick={(e) => { e.stopPropagation(); document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' }); }} className="inline-flex cursor-pointer pointer-events-auto bg-orange-500 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors shadow-lg">
+                              View Plans
+                            </a>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* Transparent overlays to block standard YouTube outbound links for subscribed users */}
+                          {/* Overlay to block Title, Watch Later, and Share/Copy Link at the top */}
+                          <div className="absolute top-0 left-0 w-full h-[70px] bg-transparent z-10 cursor-default"></div>
+                          {/* Overlay to block "Watch on YouTube" logo at the bottom right */}
+                          <div className="absolute bottom-0 right-0 w-[160px] h-[60px] bg-transparent z-10 cursor-default"></div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div 
+                      className="relative h-full w-full group cursor-pointer" 
+                      onClick={() => {
+                        if (seminar.videoUrl && getYouTubeId(seminar.videoUrl)) {
+                          setPlayingVideoId(seminar.id);
+                        } else {
+                          alert("This seminar does not have an active video yet.");
+                        }
+                      }}
+                    >
+                      {(() => {
+                        const ytId = getYouTubeId(seminar.videoUrl);
+                        const isDefaultImage = !seminar.image || seminar.image === 'https://i.imgur.com/1u0MFk9.jpeg';
+                        const displayImage = ytId && isDefaultImage ? `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg` : (seminar.image || 'https://i.imgur.com/1u0MFk9.jpeg');
+                        return (
+                          <img src={displayImage} alt={seminar.title} loading="lazy" referrerPolicy="no-referrer" className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity" />
+                        );
+                      })()}
+                      
+                      {!hasAccess && (
+                        <div className="absolute top-4 right-4 bg-orange-500/90 backdrop-blur text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold shadow-lg z-10">
+                          <Lock className="w-3.5 h-3.5" />
+                          Premium
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <PlayCircle className="h-16 w-16 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 flex flex-col flex-grow">
+                  <div className="mb-4">
+                    <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">{seminar.category}</span>
+                    <h3 className="text-xl font-bold text-gray-900 mt-2">{seminar.title}</h3>
+                  </div>
+                  <p className="text-gray-600 mb-6 flex-grow">{seminar.description}</p>
+                  
+                  <div className="flex items-center gap-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 text-gray-600 text-sm">
+                      <Clock className="h-4 w-4 text-[#059669]" />
+                      <span className="font-medium">{seminar.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600 text-sm">
+                      <User className="h-4 w-4 text-[#059669]" />
+                      <span className="font-medium">{seminar.trainer}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )))}
+          </div>
         </div>
       </section>
 

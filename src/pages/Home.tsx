@@ -4,6 +4,7 @@ import {ArrowRight, Clock, PhoneCall, Star, Calendar, Phone } from 'lucide-react
 import { products } from '../data/products';
 import { PricingSection } from '../components/PricingSection';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -11,6 +12,10 @@ export default function Home() {
 
   return (
     <div>
+      <SEO 
+        title="1st Maga Center for Optimal Healthcare" 
+        description="Experience world-class medical care with our team of expert specialists at LFD Service. We provide living food and drinks and natural health solutions."
+      />
       {/* Hero Section */}
       <section className="relative w-full min-h-[100vh] lg:min-h-[800px] flex items-center pt-24 pb-32 lg:pb-40">
         {/* Background Layer */}
@@ -145,6 +150,7 @@ export default function Home() {
                   <img 
                     src={product.image} 
                     alt={product.name}
+                    loading="lazy"
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />

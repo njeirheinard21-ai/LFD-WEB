@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PlayCircle, Lock, AlertCircle, ShieldCheck, ArrowRight, VideoOff, Radio, Maximize, Minimize } from 'lucide-react';
+import { PlayCircle, Lock, AlertCircle, ShieldCheck, ArrowRight, VideoOff, Radio, Maximize, Minimize, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { collection, query, where, getDocs, doc, onSnapshot } from 'firebase/firestore';
@@ -73,9 +73,30 @@ export default function LiveSeminars() {
     };
   }, []);
 
+  useEffect(() => {
+    // Intercept and prevent any native fullscreen attempts by the iframe
+    const preventNativeFullscreen = () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+    document.addEventListener('fullscreenchange', preventNativeFullscreen);
+    return () => document.removeEventListener('fullscreenchange', preventNativeFullscreen);
+  }, []);
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
 
   useEffect(() => {
     // Prevent right-clicking globally on this page
@@ -217,62 +238,70 @@ export default function LiveSeminars() {
                       onMouseLeave={() => setShowControls(false)}
                       onClick={resetControlsTimeout}
                     >
-                      {/* Transparent full overlay click shield (Optional, disabled pointer-events-auto to allow center play/pause clicking) */}
+                      {/* Transparent full overlay click shield */}
                       <div className="absolute inset-0 z-10 pointer-events-none" />
 
-                      {/* Bottom-left overlay (blocks "Watch on YouTube"/Copy Link and native play but controls=1 center acts as play) */}
-                      <div 
-                        className="absolute bottom-0 left-0 w-[150px] h-[60px] z-40 bg-transparent cursor-default pointer-events-auto"
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
+                      {/* 🔒 Overlay Blockers */}
+                      
+                      {/* Left Block (blocks share/link) */}
+                      <div className="absolute bottom-0 left-0 w-[200px] h-[120px] z-40 pointer-events-auto cursor-default bg-transparent" onContextMenu={(e) => e.preventDefault()} />
 
-                      {/* Bottom-right overlay (blocks YouTube logo) */}
-                      <div 
-                        className="absolute bottom-0 right-[48px] w-[130px] h-[60px] z-40 bg-transparent cursor-default pointer-events-auto"
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
+                      {/* Right Block (blocks YouTube logo and fullscreen) */}
+                      <div className="absolute bottom-0 right-0 w-[200px] h-[120px] z-40 pointer-events-auto cursor-default bg-transparent" onContextMenu={(e) => e.preventDefault()} />
                       
-                      {/* Top-right overlay (blocks Share/Copy Link button) */}
-                      <div 
-                        className="absolute top-0 right-0 w-[120px] h-[80px] z-40 bg-transparent cursor-default pointer-events-auto"
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
-                      
-                      {/* Top-left overlay (blocks title/avatar which can link to YouTube) */}
-                      <div 
-                        className="absolute top-0 left-0 w-[80%] h-[80px] z-40 bg-transparent cursor-default pointer-events-auto"
-                        onContextMenu={(e) => e.preventDefault()}
-                        onDragStart={(e) => e.preventDefault()}
-                      />
+                      {/* Bottom Block (blocks entire control bar) */}
+                      <div className="absolute bottom-0 left-0 w-full h-[80px] z-40 pointer-events-auto cursor-default bg-transparent" onContextMenu={(e) => e.preventDefault()} />
+
+                      {/* Top Block (blocks title and avatar) */}
+                      <div className="absolute top-0 left-0 w-full h-[100px] z-40 pointer-events-auto cursor-default bg-transparent" onContextMenu={(e) => e.preventDefault()} />
 
                       {/* Secure YouTube Iframe Embed */}
                       <iframe 
                         className="w-full h-full z-0 relative pointer-events-auto"
-                        src={`https://www.youtube.com/embed/${getYouTubeId(liveStream.streamUrl)}?modestbranding=1&rel=0&controls=1&disablekb=1&fs=1&iv_load_policy=3`}
+                        src={`https://www.youtube.com/embed/${getYouTubeId(liveStream.streamUrl)}?modestbranding=1&rel=0&controls=1&disablekb=1&fs=0&playsinline=1`}
                         title={liveStream.title}
                         frameBorder="0"
-                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                        allow="autoplay; encrypted-media"
                       />
                       
-                      {/* Custom UI Controls for Fullscreen (Placed exactly over the native YouTube Fullscreen Button) */}
+                      {/* 🎛 Controls */}
                       <AnimatePresence>
                         {showControls && (
-                          <motion.button 
+                          <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute top-3 right-3 z-50 flex gap-2 pointer-events-auto"
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFullscreen();
+                              }}
+                              className="bg-black/70 hover:bg-black text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2 backdrop-blur-md border border-white/10"
+                            >
+                              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                              {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* ❌ Close button in fullscreen */}
+                      <AnimatePresence>
+                        {showControls && isFullscreen && (
+                          <motion.button
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              toggleFullscreen();
-                            }} 
-                            className="absolute bottom-0 right-0 w-[65px] h-[52px] z-[60] bg-[#0f0f0f] text-white flex items-center justify-center pointer-events-auto hover:text-green-400 focus:outline-none transition-colors border-l border-t border-white/5 rounded-tl-md shadow-2xl"
-                            aria-label="Toggle Fullscreen"
-                            title="Fullscreen"
+                              setIsFullscreen(false);
+                            }}
+                            className="absolute top-3 left-3 z-[60] bg-black/70 hover:bg-black text-white p-2 rounded-md transition-all flex items-center justify-center backdrop-blur-md border border-white/10 pointer-events-auto"
+                            aria-label="Close Fullscreen"
                           >
-                            {isFullscreen ? <Minimize strokeWidth={2.5} className="w-[22px] h-[22px] -ml-1 -mt-1" /> : <Maximize strokeWidth={2.5} className="w-[22px] h-[22px] -ml-1 -mt-1" />}
+                            <X className="w-5 h-5" />
                           </motion.button>
                         )}
                       </AnimatePresence>
@@ -349,20 +378,39 @@ export default function LiveSeminars() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 p-12 md:p-20 text-center max-w-3xl mx-auto animate-in fade-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
-              <VideoOff className="h-12 w-12 text-gray-300" />
+          <div className="bg-white rounded-[3rem] shadow-xl border border-gray-100 p-12 md:p-20 text-center max-w-3xl mx-auto animate-in fade-in zoom-in duration-500 overflow-hidden relative">
+            {liveStream?.thumbnailUrl && (
+              <div className="absolute inset-0 z-0">
+                <img src={liveStream.thumbnailUrl} alt="Live Stream Thumbnail" referrerPolicy="no-referrer" loading="lazy" className="w-full h-full object-cover opacity-20 filter blur-sm" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+              </div>
+            )}
+            
+            <div className="relative z-10">
+              {liveStream?.thumbnailUrl ? (
+                <div className="w-full max-w-md mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl mb-8 relative border-4 border-white">
+                  <img src={liveStream.thumbnailUrl} alt="Thumbnail" referrerPolicy="no-referrer" loading="lazy" className="w-full h-full object-cover" />
+                  <div className="absolute top-4 left-4 bg-black/70 backdrop-blur text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2">
+                    <VideoOff className="w-4 h-4" /> Offline
+                  </div>
+                </div>
+              ) : (
+                <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <VideoOff className="h-12 w-12 text-gray-300" />
+                </div>
+              )}
+              
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('live.no_live', 'No Live Seminar Running')}</h2>
+              <p className="text-gray-600 text-lg mb-10 leading-relaxed max-w-xl mx-auto">
+                {t('live.no_live_desc', 'There are currently no live sessions in progress. Check the schedule or your email for upcoming seminar announcements.')}
+              </p>
+              <button 
+                onClick={() => navigate('/seminars')}
+                className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg"
+              >
+                {t('live.browse_past', 'Browse Past Seminars')} <ArrowRight className="h-5 w-5" />
+              </button>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('live.no_live', 'No Live Seminar Running')}</h2>
-            <p className="text-gray-600 text-lg mb-10 leading-relaxed">
-              {t('live.no_live_desc', 'There are currently no live sessions in progress. Check the schedule or your email for upcoming seminar announcements.')}
-            </p>
-            <button 
-              onClick={() => navigate('/seminars')}
-              className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg"
-            >
-              {t('live.browse_past', 'Browse Past Seminars')} <ArrowRight className="h-5 w-5" />
-            </button>
           </div>
         )}
       </div>

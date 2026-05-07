@@ -1,11 +1,17 @@
 import { CheckCircle2, Target, Eye, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
 
 export default function About() {
   const { t } = useTranslation();
 
   return (
     <div className="bg-white">
+      <SEO 
+        title="About Us"
+        description="Learn about LFD Service, the 1st Maga Center for Optimal Healthcare. Discover our history, mission, and how living food and drinks can transform your life."
+        url="https://lfdservice.org/about"
+      />
       {/* Page Header */}
       <div className="bg-purple-900 py-20 text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{t('about.title', 'About Optimal Healthcare')}</h1>
@@ -44,6 +50,7 @@ export default function About() {
               <img 
                 src="https://i.imgur.com/r0N9aBe.png" 
                 alt="Optimal Healthcare Excellence" 
+                loading="lazy"
                 className="rounded-2xl shadow-xl w-full h-auto object-cover"
                 referrerPolicy="no-referrer"
               />
@@ -100,7 +107,7 @@ export default function About() {
               { name: 'Dr. James Mitchell', role: t('about.hos', 'Head of Surgery'), img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=1964&auto=format&fit=crop' }
             ].map((leader, i) => (
               <div key={i} className="text-center">
-                <img src={leader.img} alt={leader.name} className="w-48 h-48 rounded-full object-cover mx-auto mb-6 shadow-md" />
+                <img src={leader.img} alt={leader.name} loading="lazy" className="w-48 h-48 rounded-full object-cover mx-auto mb-6 shadow-md" />
                 <h3 className="text-xl font-bold text-gray-900">{leader.name}</h3>
                 <p className="text-emerald-600 font-medium">{leader.role}</p>
               </div>

@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { products } from '../data/products';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
 
 export default function Products() {
   const { t } = useTranslation();
@@ -23,6 +24,11 @@ export default function Products() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-24">
+      <SEO 
+        title="Living Food and Drinks Products"
+        description="Explore our range of living food and drinks, nutritional supplements, and natural wellness products for optimal healthcare and healing."
+        url="https://lfdservice.org/products"
+      />
       {/* Hero Section */}
       <section className="bg-purple-50 py-20 lg:py-32 text-center border-b border-purple-100 px-4 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#8B5CF6 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
@@ -99,6 +105,7 @@ export default function Products() {
                   <img 
                     src={product.image} 
                     alt={product.name} 
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                   />
                   {product.rating >= 4.9 && (

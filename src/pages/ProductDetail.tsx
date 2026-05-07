@@ -3,6 +3,7 @@ import { ArrowLeft, Star, ShieldCheck, Leaf, MessageCircle, CheckCircle } from '
 import { motion } from 'motion/react';
 import { products } from '../data/products';
 import { useTranslation } from 'react-i18next';
+import { SEO } from '../components/SEO';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -34,6 +35,32 @@ export default function ProductDetail() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-24 pt-24">
+      <SEO 
+        title={`${product.name} | Natural Health Products`}
+        description={product.description}
+        image={product.image}
+        url={`https://lfdservice.org/products/${product.id}`}
+        schema={{
+          "@type": "Product",
+          "name": product.name,
+          "image": product.image,
+          "description": product.description,
+          "brand": {
+            "@type": "Brand",
+            "name": "LFD Service"
+          },
+          "offers": {
+            "@type": "Offer",
+            "priceCurrency": "USD",
+            "price": product.price.replace(/[^0-9.]/g, ''),
+            "availability": "https://schema.org/InStock",
+            "seller": {
+              "@type": "Organization",
+              "name": "LFD Service"
+            }
+          }
+        }}
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Back Button */}

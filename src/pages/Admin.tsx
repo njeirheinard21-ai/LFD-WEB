@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, updateDoc, doc, query, orderBy, onSnapshot, addDoc, deleteDoc, getDocs, where, setDoc } from 'firebase/firestore';
+import { collection, updateDoc, doc, query, orderBy, onSnapshot, addDoc, deleteDoc, getDocs, where, setDoc, limit } from 'firebase/firestore';
 import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { useAuth } from '../components/AuthContext';
-import { CheckCircle, AlertCircle, Clock, ShieldCheck, Search, X, Trash2, Users, UserPlus, ShieldAlert, Video, Radio, Settings, Activity, Globe, MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, ShieldCheck, Search, X, Trash2, Users, UserPlus, ShieldAlert, Video, Radio, Settings, Activity, Globe, MessageSquare, Image as ImageIcon, VideoOff } from 'lucide-react';
 import { PRICING, formatPrice } from '../lib/pricing';
 
 interface Subscription {
@@ -41,12 +41,25 @@ interface LiveStream {
   thumbnailUrl: string;
 }
 
+interface PastSeminar {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  duration: string;
+  trainer: string;
+  image: string;
+  videoUrl: string;
+  createdAt?: string;
+}
+
 export default function Admin() {
   const { user, loading: authLoading } = useAuth();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
+  const [pastSeminars, setPastSeminars] = useState<PastSeminar[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'roles' | 'streaming'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'roles' | 'streaming' | 'past-seminars'>('subscriptions');
   const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'expired' | 'key_generated'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -86,7 +99,7 @@ export default function Admin() {
 
     // Real-time Data Listener for Subscriptions
     const path = 'subscriptions';
-    const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, path), orderBy('createdAt', 'desc'), limit(100));
     
     const unsubscribeSubs = onSnapshot(q, (snapshot) => {
       const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subscription));
@@ -104,7 +117,7 @@ export default function Admin() {
 
     // Real-time Data Listener for Users (Role Management)
     const usersPath = 'users';
-    const usersQ = query(collection(db, usersPath), orderBy('createdAt', 'desc'));
+    const usersQ = query(collection(db, usersPath), orderBy('createdAt', 'desc'), limit(100));
     const unsubscribeUsers = onSnapshot(usersQ, (snapshot) => {
       const appUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppUser));
       setUsers(appUsers);
@@ -122,10 +135,26 @@ export default function Admin() {
       console.error(">>> fetchLiveStream FAILED:", err);
     });
 
+    // Real-time Data Listener for Past Seminars
+    const pastSeminarsQ = query(collection(db, 'pastSeminars'));
+    const unsubscribePastSeminars = onSnapshot(pastSeminarsQ, (snapshot) => {
+      const seminars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PastSeminar));
+      // Sort in-memory to prevent missing documents that lack createdAt
+      seminars.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      setPastSeminars(seminars);
+    }, (err) => {
+      console.error(">>> fetchPastSeminars FAILED:", err);
+    });
+
     return () => {
       unsubscribeSubs();
       unsubscribeUsers();
       unsubscribeStream();
+      unsubscribePastSeminars();
     };
   }, [user, authLoading, navigate, isAdmin]);
 
@@ -374,6 +403,45 @@ export default function Admin() {
     }
   };
 
+  const handleCreatePastSeminar = async () => {
+    try {
+      await addDoc(collection(db, 'pastSeminars'), {
+        title: 'New Seminar',
+        category: 'General Health',
+        description: 'Description of the seminar',
+        duration: '1 Hour',
+        trainer: 'Trainer Name',
+        image: 'https://i.imgur.com/1u0MFk9.jpeg',
+        videoUrl: '',
+        createdAt: new Date().toISOString()
+      });
+      alert('Seminar created successfully');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create seminar');
+    }
+  };
+
+  const handleUpdatePastSeminar = async (id: string, updates: Partial<PastSeminar>) => {
+    try {
+      await updateDoc(doc(db, 'pastSeminars', id), updates);
+      alert('Seminar updated successfully');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update seminar');
+    }
+  };
+
+  const handleDeletePastSeminar = async (id: string) => {
+    // Removed window.confirm because it is often blocked in iframes
+    try {
+      await deleteDoc(doc(db, 'pastSeminars', id));
+    } catch (err: any) {
+      console.error(err);
+      handleFirestoreError(err, OperationType.DELETE, 'pastSeminars');
+    }
+  };
+
   const filteredSubs = subscriptions.filter(sub => {
     const matchesFilter = filter === 'all' || sub.status === filter;
     const matchesSearch = 
@@ -418,6 +486,16 @@ export default function Admin() {
             }`}
           >
             Live Streaming
+          </button>
+          <button
+            onClick={() => setActiveTab('past-seminars')}
+            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${
+              activeTab === 'past-seminars' 
+                ? 'border-[#059669] text-[#059669]' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Past Seminars
           </button>
         </div>
 
@@ -977,7 +1055,7 @@ export default function Admin() {
                     </div>
                     <h2 className="text-xl font-bold text-gray-900">Stream Settings</h2>
                   </div>
-
+                  {/* ... (rest of streaming form) ... */}
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-bold text-gray-700 mb-2">Stream Title</label>
@@ -997,6 +1075,16 @@ export default function Admin() {
                         onChange={(e) => setLiveStream({ ...liveStream, description: e.target.value })}
                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all resize-none"
                         placeholder="What is this seminar about?"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Thumbnail URL</label>
+                      <input 
+                        type="text"
+                        value={liveStream.thumbnailUrl || ''}
+                        onChange={(e) => setLiveStream({ ...liveStream, thumbnailUrl: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
+                        placeholder="https://example.com/image.jpg"
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1174,6 +1262,158 @@ export default function Admin() {
               </div>
 
             </div>
+          </div>
+        ) : activeTab === 'past-seminars' ? (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Video className="h-6 w-6 text-[#059669]" /> Manage Past Seminars
+                </h2>
+                <p className="text-gray-500 text-sm mt-1">Add or edit recorded videos in the library.</p>
+              </div>
+              <button
+                onClick={handleCreatePastSeminar}
+                className="bg-[#059669] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#047857] transition-all flex items-center gap-2 shadow-sm"
+              >
+                + Add Seminar
+              </button>
+            </div>
+            
+            {pastSeminars.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
+                <VideoOff className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-gray-900">No Past Seminars</h3>
+                <p className="text-gray-500 mt-1">Click "Add Seminar" to curate your library.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {pastSeminars.map((seminar) => (
+                  <form 
+                    key={seminar.id} 
+                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm relative overflow-hidden group"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      let videoUrlRaw = formData.get('videoUrl') as string;
+                      const extractedId = getYouTubeId(videoUrlRaw);
+                      if (extractedId) {
+                        videoUrlRaw = `https://www.youtube.com/watch?v=${extractedId}`;
+                      }
+
+                      const updates = {
+                        title: formData.get('title') as string,
+                        category: formData.get('category') as string,
+                        duration: formData.get('duration') as string,
+                        trainer: formData.get('trainer') as string,
+                        description: formData.get('description') as string,
+                        videoUrl: videoUrlRaw,
+                        image: formData.get('image') as string,
+                        updatedAt: new Date().toISOString()
+                      };
+                      handleUpdatePastSeminar(seminar.id, updates);
+                    }}
+                  >
+                    <div className="absolute top-4 right-4 z-10 flex gap-2">
+                      <button
+                        type="submit"
+                        className="bg-[#059669] text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-[#047857] transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePastSeminar(seminar.id)}
+                        className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                        title="Delete Seminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-rows-auto gap-4 mt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1">Title</label>
+                          <input 
+                            type="text" 
+                            name="title"
+                            defaultValue={seminar.title}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#059669] outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1">Category</label>
+                          <input 
+                            type="text" 
+                            name="category"
+                            defaultValue={seminar.category}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#059669] outline-none"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1">Duration</label>
+                          <input 
+                            type="text" 
+                            name="duration"
+                            defaultValue={seminar.duration}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#059669] outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 mb-1">Trainer Name</label>
+                          <input 
+                            type="text" 
+                            name="trainer"
+                            defaultValue={seminar.trainer}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#059669] outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 mb-1">Description</label>
+                        <textarea 
+                          rows={2}
+                          name="description"
+                          defaultValue={seminar.description}
+                          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-[#059669] outline-none resize-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="flex items-center gap-2 text-xs font-bold text-red-600 mb-1">
+                          <Video className="w-3 h-3" /> YouTube Video URL
+                        </label>
+                        <input 
+                          type="text" 
+                          name="videoUrl"
+                          defaultValue={seminar.videoUrl}
+                          placeholder="e.g. https://www.youtube.com/watch?v=..."
+                          className="w-full px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-800 placeholder-red-300 focus:ring-2 focus:ring-red-400 outline-none"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="flex items-center gap-2 text-xs font-bold text-purple-600 mb-1">
+                          <ImageIcon className="w-3 h-3" /> Cover Image URL
+                        </label>
+                        <input 
+                          type="text" 
+                          name="image"
+                          defaultValue={seminar.image}
+                          className="w-full px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-sm font-medium text-purple-800 placeholder-purple-300 focus:ring-2 focus:ring-purple-400 outline-none"
+                        />
+                      </div>
+
+                    </div>
+                  </form>
+                ))}
+              </div>
+            )}
           </div>
         ) : null}
       </div>
