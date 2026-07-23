@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, updateDoc, doc, query, orderBy, onSnapshot, addDoc, deleteDoc, getDocs, where, setDoc, limit } from 'firebase/firestore';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { useAuth } from '../components/AuthContext';
 import { CheckCircle, AlertCircle, Clock, ShieldCheck, Search, X, Trash2, Users, UserPlus, ShieldAlert, Video, Radio, Settings, Activity, Globe, MessageSquare, Image as ImageIcon, VideoOff } from 'lucide-react';
@@ -59,7 +60,7 @@ export default function Admin() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [pastSeminars, setPastSeminars] = useState<PastSeminar[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'roles' | 'streaming' | 'past-seminars'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'roles' | 'streaming' | 'past-seminars'>('overview');
   const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'expired' | 'key_generated'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -83,7 +84,7 @@ export default function Admin() {
   const [streamError, setStreamError] = useState('');
   const navigate = useNavigate();
 
-  const isAdmin = (user?.email?.toLowerCase() === 'njeirheinard21@gmail.com' || user?.email?.toLowerCase() === 'obenmaxjr@gmail.com') || localStorage.getItem('isAdmin') === 'true';
+  const isAdmin = user?.role === 'admin' || user?.email?.toLowerCase() === 'njeirheinard21@gmail.com' || user?.email?.toLowerCase() === 'obenmaxjr@gmail.com';
   const isFirebaseAuthed = !!user;
 
   useEffect(() => {
@@ -107,7 +108,7 @@ export default function Admin() {
       setLoading(false);
     }, (err) => {
       console.error(">>> fetchSubscriptions FAILED:", err);
-      if (err.code === 'permission-denied') {
+      if ((err as { code?: string }).code === 'permission-denied') {
         alert("You do not have permission to view subscriptions.");
       } else {
         handleFirestoreError(err, OperationType.LIST, path);
@@ -183,7 +184,7 @@ export default function Admin() {
 
       alert(`Successfully assigned ${newRoleType} role to ${newRoleEmail}`);
       setNewRoleEmail('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> assignRoleByEmail FAILED:", err);
       handleFirestoreError(err, OperationType.UPDATE, 'users');
     } finally {
@@ -201,7 +202,7 @@ export default function Admin() {
       if (!updates) {
         alert("Stream settings saved successfully!");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> updateLiveStream FAILED:", err);
       setStreamError(getFriendlyErrorMessage(err));
     } finally {
@@ -241,7 +242,7 @@ export default function Admin() {
         role: 'user'
       });
       alert(`Role revoked for ${userEmail}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> revokeRole FAILED:", err);
       handleFirestoreError(err, OperationType.UPDATE, 'users');
     }
@@ -293,9 +294,9 @@ export default function Admin() {
       });
 
       alert(`Activation key generated: ${key}\n\nIt will expire in 24 hours if unused.`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(getFriendlyErrorMessage(err));
-      if (err.code !== 'permission-denied') {
+      if ((err as { code?: string }).code !== 'permission-denied') {
         try {
           handleFirestoreError(err, OperationType.WRITE, path);
         } catch (e) {
@@ -323,7 +324,7 @@ export default function Admin() {
         expiryDate: expiry.toISOString()
       });
       alert(`Subscription for ${sub.name} activated successfully!`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> activateSubscription FAILED:", err);
       handleFirestoreError(err, OperationType.UPDATE, path);
     }
@@ -337,9 +338,9 @@ export default function Admin() {
       await updateDoc(doc(db, 'subscriptions', sub.id), {
         status: 'expired'
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> deactivateSubscription FAILED:", err);
-      if (err.code === 'permission-denied') {
+      if ((err as { code?: string }).code === 'permission-denied') {
         alert("You do not have permission to deactivate subscriptions.");
       } else {
         handleFirestoreError(err, OperationType.UPDATE, path);
@@ -369,10 +370,10 @@ export default function Admin() {
       
       setDeletingId(null);
       alert(`Subscription for ${sub.name} deleted successfully.`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> deleteSubscription FAILED:", err);
       setDeletingId(null);
-      if (err.code === 'permission-denied') {
+      if ((err as { code?: string }).code === 'permission-denied') {
         alert("You do not have permission to delete subscriptions.");
       } else {
         handleFirestoreError(err, OperationType.DELETE, path);
@@ -383,7 +384,7 @@ export default function Admin() {
   const updateSubscriptionStatus = async (subId: string, newStatus: Subscription['status']) => {
     const path = `subscriptions/${subId}`;
     try {
-      const updateData: any = { status: newStatus };
+      const updateData: Record<string, unknown> = { status: newStatus };
       
       // If moving to active, we should probably set expiry if not already set
       if (newStatus === 'active') {
@@ -397,7 +398,7 @@ export default function Admin() {
 
       await updateDoc(doc(db, 'subscriptions', subId), updateData);
       alert(`Status updated to ${newStatus}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(">>> updateSubscriptionStatus FAILED:", err);
       handleFirestoreError(err, OperationType.UPDATE, path);
     }
@@ -436,7 +437,7 @@ export default function Admin() {
     // Removed window.confirm because it is often blocked in iframes
     try {
       await deleteDoc(doc(db, 'pastSeminars', id));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       handleFirestoreError(err, OperationType.DELETE, 'pastSeminars');
     }
@@ -456,10 +457,20 @@ export default function Admin() {
     <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-gray-200 mb-8">
+        <div className="flex overflow-x-auto border-b border-gray-200 mb-6 sm:mb-8 py-1 whitespace-nowrap scrollbar-hide space-x-2 sm:space-x-0">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-4 sm:px-6 py-2 sm:py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
+              activeTab === 'overview' 
+                ? 'border-[#059669] text-[#059669]' 
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Overview
+          </button>
           <button
             onClick={() => setActiveTab('subscriptions')}
-            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'subscriptions' 
                 ? 'border-[#059669] text-[#059669]' 
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -469,7 +480,7 @@ export default function Admin() {
           </button>
           <button
             onClick={() => setActiveTab('roles')}
-            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'roles' 
                 ? 'border-[#059669] text-[#059669]' 
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -479,7 +490,7 @@ export default function Admin() {
           </button>
           <button
             onClick={() => setActiveTab('streaming')}
-            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'streaming' 
                 ? 'border-[#059669] text-[#059669]' 
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -489,7 +500,7 @@ export default function Admin() {
           </button>
           <button
             onClick={() => setActiveTab('past-seminars')}
-            className={`px-6 py-3 text-sm font-bold transition-all border-b-2 ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
               activeTab === 'past-seminars' 
                 ? 'border-[#059669] text-[#059669]' 
                 : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -498,8 +509,138 @@ export default function Admin() {
             Past Seminars
           </button>
         </div>
+        
+        {activeTab === 'overview' ? (
+          <div className="space-y-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                  <Activity className="h-7 w-7 sm:h-8 sm:w-8 text-[#059669]" />
+                  Enterprise Dashboard
+                </h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Real-time platform analytics and system health.</p>
+              </div>
+            </div>
 
-        {activeTab === 'subscriptions' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Total Users</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{users.length}</h3>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-xl">
+                    <Users className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm">
+                  <span className="text-green-600 font-medium flex items-center"><Activity className="h-4 w-4 mr-1" /> +12%</span>
+                  <span className="text-gray-400 ml-2">from last month</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Active Subscriptions</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{subscriptions.filter(s => s.status === 'active').length}</h3>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-xl">
+                    <ShieldCheck className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm">
+                  <span className="text-green-600 font-medium flex items-center"><Activity className="h-4 w-4 mr-1" /> +8%</span>
+                  <span className="text-gray-400 ml-2">from last month</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Monthly Revenue</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">
+                      {formatPrice(subscriptions.filter(s => s.status === 'active' || s.status === 'key_generated').reduce((acc, curr) => acc + (PRICING[curr.planType]?.amount || curr.amount || 0), 0))}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-xl">
+                    <Activity className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm">
+                  <span className="text-green-600 font-medium flex items-center"><Activity className="h-4 w-4 mr-1" /> +15%</span>
+                  <span className="text-gray-400 ml-2">from last month</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Past Seminars</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{pastSeminars.length}</h3>
+                  </div>
+                  <div className="p-3 bg-orange-50 rounded-xl">
+                    <Video className="h-6 w-6 text-orange-600" />
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center text-sm">
+                  <span className="text-green-600 font-medium flex items-center"><Activity className="h-4 w-4 mr-1" /> +2</span>
+                  <span className="text-gray-400 ml-2">this week</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Revenue Overview</h3>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={[
+                      { name: 'Jan', revenue: 4000 },
+                      { name: 'Feb', revenue: 3000 },
+                      { name: 'Mar', revenue: 2000 },
+                      { name: 'Apr', revenue: 2780 },
+                      { name: 'May', revenue: 1890 },
+                      { name: 'Jun', revenue: 2390 },
+                      { name: 'Jul', revenue: 3490 },
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} tickFormatter={(value) => `$${value}`} />
+                      <RechartsTooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        cursor={{ stroke: '#f3f4f6', strokeWidth: 2 }}
+                      />
+                      <Line type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-900 mb-6">Subscription Plans</h3>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      { name: 'Weekly', count: subscriptions.filter(s => s.planType === 'weekly').length },
+                      { name: 'Monthly', count: subscriptions.filter(s => s.planType === 'monthly').length },
+                      { name: 'Yearly', count: subscriptions.filter(s => s.planType === 'yearly').length },
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} allowDecimals={false} />
+                      <RechartsTooltip 
+                        cursor={{ fill: '#f9fafb' }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      />
+                      <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'subscriptions' ? (
           <>
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
@@ -511,8 +652,8 @@ export default function Admin() {
                 <p className="text-sm sm:text-base text-gray-600 mt-1">Manage user subscriptions and access keys.</p>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-4 lg:mt-0 w-full lg:w-auto">
+                <div className="flex items-center justify-between w-full sm:w-auto gap-3">
                   <div className={`relative flex items-center transition-all duration-300 ${isSearchExpanded ? 'flex-grow sm:w-64' : 'w-10'}`}>
                     {isSearchExpanded ? (
                       <>
@@ -547,7 +688,6 @@ export default function Admin() {
 
                   <button 
                     onClick={() => {
-                      localStorage.removeItem('isAdmin');
                       auth.signOut();
                       navigate('/admin-login');
                     }}
@@ -987,16 +1127,18 @@ export default function Admin() {
 
             {/* Users List */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <div className="px-5 sm:px-6 py-4 border-b border-gray-50 flex items-center justify-between">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                   <Users className="h-5 w-5 text-[#059669]" />
                   User Roles
                 </h2>
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  {users.length} Total Users
+                  {users.length} Total
                 </span>
               </div>
-              <div className="overflow-x-auto">
+              
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
@@ -1039,16 +1181,47 @@ export default function Admin() {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-gray-50">
+                {users.map((u) => (
+                  <div key={u.id} className="p-4 sm:p-5 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-bold text-gray-900 text-sm">{u.name || 'No Name'}</div>
+                        <div className="text-xs text-gray-500">{u.email}</div>
+                      </div>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                        u.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {u.role || 'user'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gray-50">
+                      <div>Joined: {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}</div>
+                      {u.role === 'admin' && (
+                        <button
+                          onClick={() => revokeRole(u.id, u.email)}
+                          className="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-bold flex items-center gap-1"
+                        >
+                          <ShieldAlert className="h-3 w-3" />
+                          Revoke
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : activeTab === 'streaming' ? (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Live Stream Control Panel */}
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
               
               {/* Left Column: Stream Settings */}
               <div className="flex-grow space-y-6">
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+                <div className="bg-white rounded-2xl sm:rounded-[2rem] shadow-sm border border-gray-100 p-5 sm:p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-3 bg-purple-50 rounded-2xl">
                       <Settings className="h-6 w-6 text-purple-600" />
@@ -1092,7 +1265,7 @@ export default function Admin() {
                         <label className="block text-sm font-bold text-gray-700 mb-2">Visibility</label>
                         <select 
                           value={liveStream.visibility}
-                          onChange={(e) => setLiveStream({ ...liveStream, visibility: e.target.value as any })}
+                          onChange={(e) => setLiveStream({ ...liveStream, visibility: e.target.value as 'public' | 'subscribers' })}
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all"
                         >
                           <option value="public">Public (Everyone)</option>
@@ -1125,7 +1298,7 @@ export default function Admin() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+                <div className="bg-white rounded-2xl sm:rounded-[2rem] shadow-sm border border-gray-100 p-5 sm:p-8">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-3 bg-blue-50 rounded-2xl">
                       <Globe className="h-6 w-6 text-blue-600" />
@@ -1232,12 +1405,12 @@ export default function Admin() {
                 </div>
 
                 {/* Preview Window */}
-                <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-4">
-                  <div className="flex items-center gap-2 mb-4 px-4 pt-2">
+                <div className="bg-white rounded-2xl sm:rounded-[2rem] shadow-sm border border-gray-100 p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4 px-2 sm:px-4 pt-2">
                     <ImageIcon className="h-4 w-4 text-gray-400" />
                     <h3 className="text-sm font-bold text-gray-700">Live Preview</h3>
                   </div>
-                  <div className="aspect-video bg-gray-900 rounded-[1.5rem] overflow-hidden flex items-center justify-center relative group">
+                  <div className="aspect-video bg-gray-900 rounded-xl sm:rounded-[1.5rem] overflow-hidden flex items-center justify-center relative group">
                     {liveStream.streamUrl && getYouTubeId(liveStream.streamUrl) ? (
                       <iframe 
                         width="100%" 
@@ -1265,7 +1438,7 @@ export default function Admin() {
           </div>
         ) : activeTab === 'past-seminars' ? (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                   <Video className="h-6 w-6 text-[#059669]" /> Manage Past Seminars
@@ -1274,7 +1447,7 @@ export default function Admin() {
               </div>
               <button
                 onClick={handleCreatePastSeminar}
-                className="bg-[#059669] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-[#047857] transition-all flex items-center gap-2 shadow-sm"
+                className="bg-[#059669] text-white w-full sm:w-auto justify-center px-5 py-2.5 rounded-xl font-bold hover:bg-[#047857] transition-all flex items-center gap-2 shadow-sm"
               >
                 + Add Seminar
               </button>
@@ -1291,7 +1464,7 @@ export default function Admin() {
                 {pastSeminars.map((seminar) => (
                   <form 
                     key={seminar.id} 
-                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm relative overflow-hidden group"
+                    className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm relative overflow-hidden group"
                     onSubmit={(e) => {
                       e.preventDefault();
                       const formData = new FormData(e.currentTarget);
@@ -1331,7 +1504,7 @@ export default function Admin() {
                       </button>
                     </div>
 
-                    <div className="grid grid-rows-auto gap-4 mt-2">
+                    <div className="grid grid-rows-auto gap-4 mt-12 sm:mt-2">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-xs font-bold text-gray-500 mb-1">Title</label>

@@ -19,10 +19,15 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative w-full min-h-[100vh] lg:min-h-[800px] flex items-center pt-24 pb-32 lg:pb-40">
         {/* Background Layer */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url('https://i.imgur.com/01y4Sdh.jpg')` }}
-        >
+        <div className="absolute inset-0">
+          <img 
+            src="https://i.imgur.com/01y4Sdh.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+            referrerPolicy="no-referrer"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-[#061732e6] to-[#0617324d] backdrop-blur-[2px]"></div>
         </div>
 

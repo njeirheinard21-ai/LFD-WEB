@@ -80,6 +80,33 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "videoUrl"]
+    },
+    "SeminarMessage": {
+      "title": "SeminarMessage",
+      "description": "Chat messages sent during a live seminar",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "text": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "streamStartedAt": { "type": "string" }
+      },
+      "required": ["userId", "userName", "text", "createdAt"]
+    },
+    "SeminarAttendance": {
+      "title": "SeminarAttendance",
+      "description": "Attendance record for live seminars",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userName": { "type": "string" },
+        "streamTitle": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "joinedAt"]
     }
   },
   "firestore": {
@@ -102,6 +129,14 @@
     "/pastSeminars/{seminarId}": {
       "schema": { "$ref": "#/entities/PastSeminar" },
       "description": "Past Seminars"
+    },
+    "/seminarMessages/{messageId}": {
+      "schema": { "$ref": "#/entities/SeminarMessage" },
+      "description": "Chat messages for live seminars"
+    },
+    "/seminarAttendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/SeminarAttendance" },
+      "description": "Attendance tracking for live seminars"
     }
   }
 }

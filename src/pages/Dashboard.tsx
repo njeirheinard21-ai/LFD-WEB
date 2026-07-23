@@ -62,13 +62,13 @@ export default function Dashboard() {
         setSuccess('Profile updated successfully!');
         setIsEditing(false);
       }
-    } catch (err: any) {
-      if (err.code === 'permission-denied') {
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'permission-denied') {
         setError("You do not have permission to update this profile.");
       } else {
         try {
           handleFirestoreError(err, OperationType.UPDATE, path);
-        } catch (finalErr: any) {
+        } catch (finalErr: unknown) {
           setError("Something went wrong. Please try again.");
         }
       }
@@ -89,15 +89,15 @@ export default function Dashboard() {
         await logout();
         navigate('/');
       }
-    } catch (err: any) {
-      if (err.code === 'auth/requires-recent-login') {
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'auth/requires-recent-login') {
         setError('Security requirement: Please log out and log back in to delete your account.');
-      } else if (err.code === 'permission-denied') {
+      } else if ((err as { code?: string }).code === 'permission-denied') {
         setError("You do not have permission to delete this account.");
       } else {
         try {
           handleFirestoreError(err, OperationType.DELETE, path);
-        } catch (finalErr: any) {
+        } catch (finalErr: unknown) {
           setError("Something went wrong. Please try again.");
         }
       }
@@ -154,7 +154,7 @@ export default function Dashboard() {
                     {subscription?.status || t('dashboard.none', 'None')}
                   </span>
                 </div>
-                {subscription?.planType !== 'none' && (
+                {subscription?.planType && (
                   <div className="text-gray-600">
                     {t('dashboard.plan', 'Plan:')} <span className="font-semibold capitalize text-gray-900">{subscription?.planType}</span>
                   </div>

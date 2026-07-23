@@ -36,9 +36,9 @@ export default function Navbar() {
               className="h-10 w-10 sm:h-12 sm:w-12 object-contain transition-transform group-hover:scale-105"
               referrerPolicy="no-referrer"
             />
-            <div className="flex items-center gap-1 sm:gap-2 leading-none sm:leading-normal">
-              <span className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-[#05c770]">Optimal</span>
-              <span className="text-base sm:text-xl md:text-2xl font-bold tracking-tight text-[#8B5CF6]">Health Care</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 leading-tight sm:leading-normal">
+              <span className="text-sm sm:text-xl md:text-2xl font-bold tracking-tight text-[#05c770] leading-none sm:leading-normal">Optimal</span>
+              <span className="text-sm sm:text-xl md:text-2xl font-bold tracking-tight text-[#8B5CF6] leading-none sm:leading-normal">Health Care</span>
             </div>
           </Link>
 

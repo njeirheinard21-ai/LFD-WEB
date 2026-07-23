@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, query, collection, where, getDocs, updateDoc } from 'firebase/firestore';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { mockBackend, User, Subscription } from '../lib/mockBackend';
+import { User, Subscription } from '../types';
 
 interface AuthContextType {
   user: User | null;

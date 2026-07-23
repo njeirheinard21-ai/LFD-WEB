@@ -12,7 +12,6 @@ export const db = initializeFirestore(app, {
 
 // TEMP debug code as requested
 onAuthStateChanged(auth, (user) => {
-  console.log("AUTH USER:", user);
 });
 
 // Initialize analytics only if window is defined (browser environment)
@@ -47,7 +46,7 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export function getFriendlyErrorMessage(error: any): string {
+export function getFriendlyErrorMessage(error: unknown): string {
   if (typeof error === 'string') {
     try {
       const parsed = JSON.parse(error);
@@ -57,7 +56,8 @@ export function getFriendlyErrorMessage(error: any): string {
     }
   }
 
-  const code = error?.code || error?.message || '';
+  const err = error as { code?: string; message?: string };
+  const code = err?.code || err?.message || "";
   
   // Auth Errors
   if (code.includes('auth/user-not-found') || code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
@@ -104,7 +104,7 @@ export function handleAuthError(error: unknown) {
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: error instanceof Error ? (error as { message?: string }).message : String(error),
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -126,7 +126,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   // Create a new error that includes the friendly message but keeps the JSON for debugging
   const friendlyMessage = getFriendlyErrorMessage(error);
   const errorWithMetadata = new Error(JSON.stringify(errInfo));
-  (errorWithMetadata as any).friendlyMessage = friendlyMessage;
+  Object.assign(errorWithMetadata, { friendlyMessage });
   
   throw errorWithMetadata;
 }

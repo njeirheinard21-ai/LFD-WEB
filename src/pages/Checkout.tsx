@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/AuthContext';
-import { mockBackend } from '../lib/mockBackend';
 import { CreditCard, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
 import { PRICING, formatPrice } from '../lib/pricing';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 export default function Checkout() {
   const location = useLocation();
@@ -30,7 +31,28 @@ export default function Checkout() {
     
     setLoading(true);
     try {
-      await mockBackend.processPayment(user.id, planType);
+      // Simulate real processing time
+      await new Promise(res => setTimeout(res, 1500));
+      
+      const startDate = new Date();
+      const expiryDate = new Date();
+      
+      if (planType === 'weekly') {
+        expiryDate.setDate(expiryDate.getDate() + 7);
+      } else if (planType === 'monthly') {
+        expiryDate.setDate(expiryDate.getDate() + 30);
+      } else {
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      }
+
+      await addDoc(collection(db, 'subscriptions'), {
+        userId: user.id,
+        status: 'active',
+        planType,
+        startDate: startDate.toISOString(),
+        expiryDate: expiryDate.toISOString()
+      });
+
       await refreshSubscription();
       setSuccess(true);
       setTimeout(() => {

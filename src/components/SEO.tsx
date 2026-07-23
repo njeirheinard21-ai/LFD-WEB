@@ -8,7 +8,7 @@ interface SEOProps {
   type?: string;
   url?: string;
   image?: string;
-  schema?: Record<string, any> | Record<string, any>[];
+  schema?: Record<string, unknown> | Record<string, unknown>[];
   keywords?: string;
 }
 

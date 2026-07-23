@@ -107,7 +107,13 @@ export default function About() {
               { name: 'Dr. James Mitchell', role: t('about.hos', 'Head of Surgery'), img: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=1964&auto=format&fit=crop' }
             ].map((leader, i) => (
               <div key={i} className="text-center">
-                <img src={leader.img} alt={leader.name} loading="lazy" className="w-48 h-48 rounded-full object-cover mx-auto mb-6 shadow-md" />
+                <img 
+                  src={leader.img} 
+                  alt={leader.name} 
+                  className="w-48 h-48 rounded-full object-cover mx-auto mb-6 shadow-md" 
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                />
                 <h3 className="text-xl font-bold text-gray-900">{leader.name}</h3>
                 <p className="text-emerald-600 font-medium">{leader.role}</p>
               </div>

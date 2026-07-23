@@ -45,8 +45,8 @@ export default function Login() {
       }
 
       navigate('/dashboard');
-    } catch (err: any) {
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'auth/invalid-credential' || (err as { code?: string }).code === 'auth/user-not-found' || (err as { code?: string }).code === 'auth/wrong-password') {
         setError(t('auth.invalid_cred', 'Invalid email or password. Please try again or create a new account if you do not have one.'));
         setShowSignUpOption(true);
       } else {
@@ -68,9 +68,9 @@ export default function Login() {
     try {
       await sendPasswordResetEmail(auth, email.trim());
       setResetSent(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || t('auth.reset_failed', 'Failed to send reset email'));
+      setError((err as { message?: string }).message || t('auth.reset_failed', 'Failed to send reset email'));
     } finally {
       setLoading(false);
     }

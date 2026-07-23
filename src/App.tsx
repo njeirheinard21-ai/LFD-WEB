@@ -8,6 +8,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import { AuthProvider } from './components/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AdminRoute } from './components/AdminRoute';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const About = React.lazy(() => import('./pages/About'));
@@ -42,15 +44,15 @@ export default function App() {
                 <Route path="products" element={<Products />} />
                 <Route path="products/:id" element={<ProductDetail />} />
                 <Route path="seminars" element={<Seminars />} />
-                <Route path="live-seminars" element={<LiveSeminars />} />
-                <Route path="admin" element={<Admin />} />
+                <Route path="live-seminars" element={<ProtectedRoute><LiveSeminars /></ProtectedRoute>} />
+                <Route path="admin" element={<AdminRoute><Admin /></AdminRoute>} />
                 <Route path="admin-login" element={<AdminLogin />} />
                 <Route path="appointments" element={<Navigate to="/contact" replace />} />
                 <Route path="contact" element={<Contact />} />
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="checkout" element={<Checkout />} />
+                <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               </Route>
             </Routes>
           </Suspense>

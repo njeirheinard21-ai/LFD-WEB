@@ -60,8 +60,8 @@ export default function Register() {
       }
 
       navigate('/dashboard');
-    } catch (err: any) {
-      if (err.code === 'auth/email-already-in-use') {
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'auth/email-already-in-use') {
         setError(t('auth.email_in_use', 'User already exists. Please sign in instead.'));
         setShowLoginOption(true);
       } else {

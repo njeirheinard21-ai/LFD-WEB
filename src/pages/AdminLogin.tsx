@@ -19,23 +19,15 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      // Hardcoded check as requested by the user for "mock" logic
-      if (email === 'obenmaxjr@gmail.com' && password === '@maxim2023') {
-        localStorage.setItem('isAdmin', 'true');
-        navigate('/admin');
-        return;
-      }
-
-      // Fallback to Firebase Auth for secure login
       let userCredential;
       try {
         userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      } catch (signInError: any) {
-        if (signInError.code === 'auth/invalid-credential' || signInError.code === 'auth/user-not-found') {
+      } catch (signInError: unknown) {
+        if ((signInError as { code?: string }).code === 'auth/invalid-credential' || (signInError as { code?: string }).code === 'auth/user-not-found') {
           try {
             userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-          } catch (registerError: any) {
-            if (registerError.code === 'auth/email-already-in-use') {
+          } catch (registerError: unknown) {
+            if ((registerError as { code?: string }).code === 'auth/email-already-in-use') {
               throw signInError; // Wrong password
             }
             throw registerError;
@@ -51,14 +43,14 @@ export default function AdminLogin() {
       const isAdminEmail = user.email?.toLowerCase() === 'njeirheinard21@gmail.com' || 
                            user.email?.toLowerCase() === 'obenmaxjr@gmail.com';
 
+      // Alternatively, we could check Firestore for role, but for now we fallback to the AdminRoute logic
       if (isAdminEmail) {
-        localStorage.setItem('isAdmin', 'true');
         navigate('/admin');
       } else {
         setError('Access denied. You do not have admin privileges.');
         await auth.signOut();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(handleAuthError(err));
     } finally {
       setLoading(false);

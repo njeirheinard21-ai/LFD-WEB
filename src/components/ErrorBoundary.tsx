@@ -1,5 +1,6 @@
 import React, { ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import { logger } from '../lib/logger';
 import { getFriendlyErrorMessage } from '../lib/firebase';
 
 interface Props {
@@ -25,7 +26,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    logger.error('React component tree crashed', error, { errorInfo });
   }
 
   private handleReset = () => {
@@ -40,7 +41,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
-      const friendlyMessage = (this.state.error as any)?.friendlyMessage || getFriendlyErrorMessage(this.state.error);
+      const friendlyMessage = ((this.state.error as Error & { friendlyMessage?: string })?.friendlyMessage as string | undefined) || getFriendlyErrorMessage(this.state.error);
 
       return (
         <div className="min-h-[60vh] flex items-center justify-center p-4">

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, User, CheckCircle, Star, ChevronDown, ChevronUp, Shield, Award, Lock, PlayCircle, X, Smartphone, VideoOff, Radio, AlertCircle, ArrowRight, Maximize, Minimize, Banknote } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, Star, ChevronDown, ChevronUp, Shield, Award, Lock, PlayCircle, X, Smartphone, VideoOff, Radio, AlertCircle, ArrowRight, Maximize, Minimize, Banknote, Smile } from 'lucide-react';
+const LazyEmojiPicker = React.lazy(() => import('emoji-picker-react'));
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { addDoc, collection, query, where, getDocs, updateDoc, doc, onSnapshot } from 'firebase/firestore';
@@ -21,9 +22,31 @@ interface LiveStream {
   thumbnailUrl: string;
 }
 
+interface PastSeminar {
+  id: string;
+  title: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  createdAt?: string;
+  image?: string;
+  category?: string;
+  description?: string;
+  duration?: string;
+  trainer?: string;
+}
+
+interface SeminarMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string;
+  streamStartedAt: string;
+}
+
 export default function Seminars() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { user, subscription, loading } = useAuth();
+  const { user, subscription, loading, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -36,12 +59,18 @@ export default function Seminars() {
   const [modalError, setModalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveStream, setLiveStream] = useState<LiveStream | null>(null);
-  const [pastSeminars, setPastSeminars] = useState<any[]>([]);
+  const [pastSeminars, setPastSeminars] = useState<PastSeminar[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [playingVideoId, setPlayingVideoId] = useState<string | number | null>(null);
+  const [messages, setMessages] = useState<SeminarMessage[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const resetControlsTimeout = () => {
     setShowControls(true);
@@ -51,6 +80,63 @@ export default function Seminars() {
     controlsTimeoutRef.current = setTimeout(() => {
       setShowControls(false);
     }, 3000);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    if (liveStream?.isLive && liveStream.startedAt) {
+      const messagesRef = collection(db, 'seminarMessages');
+      const q = query(
+        messagesRef,
+        where('streamStartedAt', '==', liveStream.startedAt)
+      );
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const msgs = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as SeminarMessage[];
+        
+        msgs.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        setMessages(msgs);
+        setTimeout(scrollToBottom, 100);
+      }, (err) => {
+        console.error("Chat fetch error:", err);
+      });
+      return () => unsubscribe();
+    }
+  }, [liveStream?.isLive, liveStream?.startedAt]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !user || !liveStream) return;
+
+    try {
+      const messagesRef = collection(db, 'seminarMessages');
+      await addDoc(messagesRef, {
+        userId: user.id,
+        userName: user.fullName || 'User',
+        text: newMessage.trim(),
+        createdAt: new Date().toISOString(),
+        streamStartedAt: liveStream.startedAt
+      });
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   useEffect(() => {
@@ -75,7 +161,7 @@ export default function Seminars() {
       if (videoContainerRef.current?.requestFullscreen) {
         await videoContainerRef.current.requestFullscreen();
         try {
-          const orientation = screen.orientation as any;
+          const orientation = screen.orientation as unknown as { lock?: (o: string) => Promise<void> };
           if (orientation && orientation.lock) {
             await orientation.lock('landscape');
           }
@@ -122,8 +208,8 @@ export default function Seminars() {
       try {
         const pastSeminarsQ = query(collection(db, 'pastSeminars'));
         const snapshot = await getDocs(pastSeminarsQ);
-        const dbSeminars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        dbSeminars.sort((a: any, b: any) => {
+        const dbSeminars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PastSeminar));
+        dbSeminars.sort((a, b) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
           return dateB - dateA;
@@ -147,7 +233,7 @@ export default function Seminars() {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const defaultSeminars: any[] = [];
+  const defaultSeminars: PastSeminar[] = [];
 
   const faqs = [
     {
@@ -217,7 +303,7 @@ export default function Seminars() {
       });
       
       setModalStep('instructions');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Subscription submission error:", error);
       setModalError(getFriendlyErrorMessage(error));
     } finally {
@@ -240,7 +326,7 @@ export default function Seminars() {
     
     const path = 'activationKeys';
     try {
-      // 1. Query activationKeys
+      // Use Firestore Transaction for duplicate prevention
       const keyQuery = query(
         collection(db, 'activationKeys'),
         where('key', '==', subKey.toUpperCase()),
@@ -255,16 +341,9 @@ export default function Seminars() {
         return;
       }
 
-      const keyDoc = keySnapshot.docs[0];
-      const keyData = keyDoc.data();
-      
-      // 2. Check if key is expired (24h)
-      if (new Date() > new Date(keyData.expiresAt)) {
-        setModalError('This activation key has expired. Please request a new one.');
-        return;
-      }
+      const keyDocRes = keySnapshot.docs[0];
+      const keyRef = doc(db, 'activationKeys', keyDocRes.id);
 
-      // 3. Query the corresponding subscription
       const subQuery = query(
         collection(db, 'subscriptions'),
         where('subscriptionKey', '==', subKey.toUpperCase()),
@@ -276,31 +355,47 @@ export default function Seminars() {
         setModalError('Subscription record not found.');
         return;
       }
+      const subDocRes = subSnapshot.docs[0];
+      const subRef = doc(db, 'subscriptions', subDocRes.id);
 
-      const subDoc = subSnapshot.docs[0];
+      import('firebase/firestore').then(async ({ runTransaction }) => {
+        await runTransaction(db, async (transaction) => {
+          const keyDoc = await transaction.get(keyRef);
+          if (!keyDoc.exists() || keyDoc.data().status !== 'unused') {
+            throw new Error("Key is already used or missing.");
+          }
+          const keyData = keyDoc.data();
 
-      // 4. Calculate dates
-      const startDate = new Date();
-      const expiryDate = new Date();
-      expiryDate.setDate(startDate.getDate() + keyData.durationDays);
+          if (new Date() > new Date(keyData.expiresAt)) {
+            throw new Error("This activation key has expired. Please request a new one.");
+          }
 
-      // 5. Update activationKey to used
-      await updateDoc(doc(db, 'activationKeys', keyDoc.id), {
-        status: 'used'
+          const subDoc = await transaction.get(subRef);
+          if (!subDoc.exists()) {
+            throw new Error("Subscription not found.");
+          }
+
+          const startDate = new Date();
+          const expiryDate = new Date();
+          expiryDate.setDate(startDate.getDate() + keyData.durationDays);
+
+          transaction.update(keyRef, { status: 'used' });
+          transaction.update(subRef, {
+            status: 'active',
+            startDate: startDate.toISOString(),
+            expiryDate: expiryDate.toISOString()
+          });
+        });
+        
+        await refreshSubscription();
+        setIsModalOpen(false);
+        navigate('/live-seminars');
+      }).catch(err => {
+        console.error("Transaction error:", err);
+        setModalError((err as { message?: string }).message || 'Key activation failed.');
       });
-
-      // 6. Update subscription to active
-      await updateDoc(doc(db, 'subscriptions', subDoc.id), {
-        status: 'active',
-        startDate: startDate.toISOString(),
-        expiryDate: expiryDate.toISOString()
-      });
-
-      localStorage.setItem('hasLiveAccess', 'true');
-      setIsModalOpen(false);
-      navigate('/live-seminars');
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Key activation error:", err);
       setModalError(getFriendlyErrorMessage(err));
     } finally {
@@ -677,38 +772,77 @@ export default function Seminars() {
                           </h3>
                         </div>
                         
-                        {liveStream.chatEnabled ? (
-                          <>
-                            <div className="flex-grow p-6 flex flex-col items-center justify-center text-center bg-white">
-                              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                                <AlertCircle className="h-8 w-8 text-gray-300" />
+                        <div className="flex flex-col h-full bg-white relative">
+                          <div className="flex-grow p-4 sm:p-6 overflow-y-auto space-y-4 absolute inset-0 bottom-[80px]">
+                            {messages.length === 0 ? (
+                              <div className="h-full flex flex-col items-center justify-center text-center text-gray-500">
+                                <p>{t('live.chat_empty', 'Be the first to send a message!')}</p>
                               </div>
-                              <p className="text-gray-500 font-medium">Chat is currently in read-only mode</p>
-                              <p className="text-gray-400 text-sm mt-1">The moderator will enable messaging shortly.</p>
-                            </div>
-                            <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-                              <div className="relative">
+                            ) : (
+                              messages.map((msg) => (
+                                <div key={msg.id} className={`flex flex-col ${msg.userId === user?.id ? 'items-end' : 'items-start'}`}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-semibold text-gray-700">{msg.userId === user?.id ? 'You' : msg.userName}</span>
+                                    <span className="text-[10px] text-gray-400">
+                                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <div className={`px-4 py-2 max-w-[85%] text-sm break-words ${msg.userId === user?.id ? 'bg-[#059669] text-white rounded-2xl rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-2xl rounded-tl-sm'}`}>
+                                    {msg.text}
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                            <div ref={messagesEndRef} />
+                          </div>
+                          
+                          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 border-t border-gray-100 bg-white">
+                            <div className="relative" ref={emojiPickerRef}>
+                              <AnimatePresence>
+                                {showEmojiPicker && (
+                                  <motion.div 
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute bottom-full right-0 mb-4 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-100"
+                                  >
+                                    <Suspense fallback={
+                                      <div className="w-[350px] h-[350px] flex items-center justify-center bg-white border border-gray-100 rounded-2xl shadow-xl">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#059669]"></div>
+                                      </div>
+                                    }>
+                                      <LazyEmojiPicker 
+                                        onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
+                                        theme="light" 
+                                        lazyLoadEmojis={true}
+                                      />
+                                    </Suspense>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                              <form onSubmit={handleSendMessage} className="relative shadow-sm rounded-2xl flex items-center">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                  className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-[#059669] transition-colors rounded-lg hover:bg-gray-100 z-10"
+                                >
+                                  <Smile className="h-5 w-5" />
+                                </button>
                                 <input 
                                   type="text" 
-                                  disabled
-                                  placeholder="Type your question..." 
-                                  className="w-full pl-4 pr-12 py-4 bg-white border border-gray-200 rounded-2xl cursor-not-allowed text-sm font-medium"
+                                  value={newMessage}
+                                  onChange={(e) => setNewMessage(e.target.value)}
+                                  placeholder={t('live.type_question', 'Type your message...')} 
+                                  className="w-full pl-12 pr-14 py-3.5 sm:py-4 bg-gray-50/50 sm:bg-white border border-gray-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-[#059669]/20 focus:border-[#059669] focus:outline-none placeholder:text-gray-400"
                                 />
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                  <ArrowRight className="h-5 w-5 text-gray-300" />
-                                </div>
-                              </div>
+                                <button type="submit" disabled={!newMessage.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#059669] text-white rounded-xl hover:bg-[#047857] disabled:opacity-50 disabled:cursor-not-allowed transition-colors z-10">
+                                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                                </button>
+                              </form>
                             </div>
-                          </>
-                        ) : (
-                          <div className="flex-grow flex flex-col items-center justify-center p-8 text-center">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                              <Radio className="h-8 w-8 text-gray-300" />
-                            </div>
-                            <p className="text-gray-500 font-bold">Chat Disabled</p>
-                            <p className="text-gray-400 text-sm mt-1">The host has disabled live chat for this session.</p>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>

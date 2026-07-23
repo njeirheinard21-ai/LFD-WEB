@@ -18,6 +18,7 @@ export default function Footer() {
                   alt="Optimal Healthcare" 
                   className="h-10 w-10 object-contain"
                   referrerPolicy="no-referrer"
+                  loading="lazy"
                 />
               </div>
               <span className="text-2xl font-bold tracking-tight font-sans">

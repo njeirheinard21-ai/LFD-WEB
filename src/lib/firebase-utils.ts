@@ -56,7 +56,7 @@ export enum OperationType {
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: error instanceof Error ? (error as { message?: string }).message : String(error),
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
