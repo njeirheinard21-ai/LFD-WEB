@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   subscription: Subscription | null;
   loading: boolean;
+  isAdmin: boolean;
   refreshSubscription: () => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -178,8 +179,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const isAdmin = user?.role === 'admin';
+
   return (
-    <AuthContext.Provider value={{ user, subscription, loading, refreshSubscription, logout, setUser: handleSetUser }}>
+    <AuthContext.Provider value={{ user, subscription, loading, isAdmin, refreshSubscription, logout, setUser: handleSetUser }}>
       {children}
     </AuthContext.Provider>
   );
@@ -191,4 +194,9 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+export function useIsAdmin() {
+  const { isAdmin } = useAuth();
+  return isAdmin;
 }

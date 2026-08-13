@@ -4,12 +4,12 @@ import { motion } from 'motion/react';
 import { products } from '../data/products';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
+import { WHATSAPP_NUMBER } from '../lib/constants';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const WHATSAPP_NUMBER = "237695821095"; // Replace with actual WhatsApp number
 
   const product = products.find(p => p.id === Number(id));
 
@@ -48,16 +48,6 @@ export default function ProductDetail() {
           "brand": {
             "@type": "Brand",
             "name": "LFD Service"
-          },
-          "offers": {
-            "@type": "Offer",
-            "priceCurrency": "USD",
-            "price": product.price.replace(/[^0-9.]/g, ''),
-            "availability": "https://schema.org/InStock",
-            "seller": {
-              "@type": "Organization",
-              "name": "LFD Service"
-            }
           }
         }}
       />

@@ -36,7 +36,7 @@ export default function Login() {
             name: userCredential.user.displayName || '',
             email: userCredential.user.email || '',
             phoneNumber: userCredential.user.phoneNumber || '',
-            role: userCredential.user.email?.toLowerCase() === 'njeirheinard21@gmail.com' ? 'admin' : 'user',
+            role: 'user',
             createdAt: new Date().toISOString()
           });
         }

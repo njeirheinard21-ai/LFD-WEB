@@ -21,7 +21,7 @@ export default function Home() {
         {/* Background Layer */}
         <div className="absolute inset-0">
           <img 
-            src="https://i.imgur.com/01y4Sdh.jpg"
+            src="https://firebasestorage.googleapis.com/v0/b/jo-accessories-44ffa.firebasestorage.app/o/Einort%2FEjjufjy%20-%20Imgur.jpg?alt=media&token=8906f169-9edb-479f-a097-e3bc7ed76f9e"
             alt=""
             className="w-full h-full object-cover"
             loading="eager"

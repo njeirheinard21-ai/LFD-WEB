@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { t } = useTranslation();
 
   const navLinks = [
@@ -59,7 +59,7 @@ export default function Navbar() {
             
             {user ? (
               <>
-                {user.email?.toLowerCase() === 'njeirheinard21@gmail.com' && (
+                {isAdmin && (
                   <Link
                     to="/admin"
                     className={cn(
@@ -150,7 +150,7 @@ export default function Navbar() {
               
               {user ? (
                 <>
-                  {user.email?.toLowerCase() === 'njeirheinard21@gmail.com' && (
+                  {isAdmin && (
                     <Link
                       to="/admin"
                       onClick={() => setIsOpen(false)}

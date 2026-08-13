@@ -52,7 +52,7 @@ export default function Register() {
           name: formData.fullName,
           email: formData.email,
           phoneNumber: formData.phone,
-          role: formData.email === 'njeirheinard21@gmail.com' ? 'admin' : 'user',
+          role: 'user',
           createdAt: new Date().toISOString()
         });
       } catch (firestoreErr) {

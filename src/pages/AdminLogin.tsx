@@ -23,33 +23,16 @@ export default function AdminLogin() {
       try {
         userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       } catch (signInError: unknown) {
-        if ((signInError as { code?: string }).code === 'auth/invalid-credential' || (signInError as { code?: string }).code === 'auth/user-not-found') {
-          try {
-            userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-          } catch (registerError: unknown) {
-            if ((registerError as { code?: string }).code === 'auth/email-already-in-use') {
-              throw signInError; // Wrong password
-            }
-            throw registerError;
-          }
-        } else {
-          throw signInError;
-        }
+        throw signInError;
       }
       
       const user = userCredential.user;
 
-      // Check if the logged-in user is an admin
-      const isAdminEmail = user.email?.toLowerCase() === 'njeirheinard21@gmail.com' || 
-                           user.email?.toLowerCase() === 'obenmaxjr@gmail.com';
-
-      // Alternatively, we could check Firestore for role, but for now we fallback to the AdminRoute logic
-      if (isAdminEmail) {
-        navigate('/admin');
-      } else {
-        setError('Access denied. You do not have admin privileges.');
-        await auth.signOut();
-      }
+      // We no longer check email here. We must wait for AuthContext to fetch the user document.
+      // But we need to ensure the user has admin role. Wait, the login redirects to /admin.
+      // AdminRoute.tsx should protect the route based on role.
+      // Let's just navigate to /admin on successful login. AdminRoute will bounce them if not admin.
+      navigate('/admin');
     } catch (err: unknown) {
       setError(handleAuthError(err));
     } finally {

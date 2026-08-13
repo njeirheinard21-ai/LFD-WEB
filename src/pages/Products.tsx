@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom';
 import { products } from '../data/products';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
+import { WHATSAPP_NUMBER } from '../lib/constants';
 
 export default function Products() {
   const { t } = useTranslation();
-  const WHATSAPP_NUMBER = "237695821095"; // Replace with actual WhatsApp number
 
   const categories = [t('products.all', 'All'), 'Nutrition', 'Wellness', 'Beverage', 'Skincare', 'Skincare & Nutrition'];
   const [activeCategory, setActiveCategory] = useState(t('products.all', 'All'));
