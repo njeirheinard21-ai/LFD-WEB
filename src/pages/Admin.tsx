@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, updateDoc, doc, query, orderBy, onSnapshot, addDoc, deleteDoc, getDocs, where, setDoc, limit, startAfter, getCountFromServer, getAggregateFromServer, sum, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, updateDoc, doc, query, orderBy, onSnapshot, addDoc, deleteDoc, getDocs, where, setDoc, limit } from 'firebase/firestore';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { db, auth, handleFirestoreError, OperationType, getFriendlyErrorMessage } from '../lib/firebase';
 import { useAuth } from '../components/AuthContext';
@@ -55,7 +55,7 @@ interface PastSeminar {
 }
 
 export default function Admin() {
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
   const [pastSeminars, setPastSeminars] = useState<PastSeminar[]>([]);
@@ -65,19 +65,9 @@ export default function Admin() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deletingPastSeminarId, setDeletingPastSeminarId] = useState<string | null>(null);
-  const [confirmAssignRole, setConfirmAssignRole] = useState(false);
   const [newRoleEmail, setNewRoleEmail] = useState('');
   const [newRoleType, setNewRoleType] = useState<'admin' | 'user'>('user');
   const [isAssigning, setIsAssigning] = useState(false);
-
-  const [totalUsersCount, setTotalUsersCount] = useState(0);
-  const [totalActiveSubs, setTotalActiveSubs] = useState(0);
-  const [subsCursor, setSubsCursor] = useState<QueryDocumentSnapshot | null>(null);
-  const [usersCursor, setUsersCursor] = useState<QueryDocumentSnapshot | null>(null);
-  const [hasMoreSubs, setHasMoreSubs] = useState(true);
-  const [hasMoreUsers, setHasMoreUsers] = useState(true);
-
   
   // Live Stream State
   const [liveStream, setLiveStream] = useState<LiveStream>({
@@ -94,78 +84,47 @@ export default function Admin() {
   const [streamError, setStreamError] = useState('');
   const navigate = useNavigate();
 
+  const isAdmin = user?.role === 'admin' || user?.email?.toLowerCase() === 'njeirheinard21@gmail.com' || user?.email?.toLowerCase() === 'obenmaxjr@gmail.com';
   const isFirebaseAuthed = !!user;
 
-  
-  const PAGE_SIZE = 25;
-
-  const fetchStats = async () => {
-    try {
-      const usersSnap = await getCountFromServer(collection(db, 'users'));
-      setTotalUsersCount(usersSnap.data().count);
-      
-      const activeSubsSnap = await getCountFromServer(query(collection(db, 'subscriptions'), where('status', '==', 'active')));
-      setTotalActiveSubs(activeSubsSnap.data().count);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const loadSubscriptions = async (isLoadMore = false) => {
-    try {
-      let q = query(collection(db, 'subscriptions'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
-      if (isLoadMore && subsCursor) {
-        q = query(collection(db, 'subscriptions'), orderBy('createdAt', 'desc'), startAfter(subsCursor), limit(PAGE_SIZE));
-      }
-      const snapshot = await getDocs(q);
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subscription));
-      
-      if (isLoadMore) {
-        setSubscriptions(prev => [...prev, ...docs]);
-      } else {
-        setSubscriptions(docs);
-      }
-      setSubsCursor(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMoreSubs(snapshot.docs.length === PAGE_SIZE);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-    }
-  };
-
-  const loadUsers = async (isLoadMore = false) => {
-    try {
-      let q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
-      if (isLoadMore && usersCursor) {
-        q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), startAfter(usersCursor), limit(PAGE_SIZE));
-      }
-      const snapshot = await getDocs(q);
-      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppUser));
-      
-      if (isLoadMore) {
-        setUsers(prev => [...prev, ...docs]);
-      } else {
-        setUsers(docs);
-      }
-      setUsersCursor(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMoreUsers(snapshot.docs.length === PAGE_SIZE);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
+    console.log(">>> Admin Check - User:", user?.email, "Role:", user?.role, "isAdmin:", isAdmin);
     if (authLoading) return;
+
+    // Access Control: Only allow users with admin role or the specific admin email
     if (!isAdmin) {
       alert("Access denied. Admin privileges required.");
       navigate('/');
       return;
     }
 
-    fetchStats();
-    loadSubscriptions();
-    loadUsers();
+    // Real-time Data Listener for Subscriptions
+    const path = 'subscriptions';
+    const q = query(collection(db, path), orderBy('createdAt', 'desc'), limit(100));
+    
+    const unsubscribeSubs = onSnapshot(q, (snapshot) => {
+      const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subscription));
+      setSubscriptions(subs);
+      setLoading(false);
+    }, (err) => {
+      console.error(">>> fetchSubscriptions FAILED:", err);
+      if ((err as { code?: string }).code === 'permission-denied') {
+        alert("You do not have permission to view subscriptions.");
+      } else {
+        handleFirestoreError(err, OperationType.LIST, path);
+      }
+      setLoading(false);
+    });
+
+    // Real-time Data Listener for Users (Role Management)
+    const usersPath = 'users';
+    const usersQ = query(collection(db, usersPath), orderBy('createdAt', 'desc'), limit(100));
+    const unsubscribeUsers = onSnapshot(usersQ, (snapshot) => {
+      const appUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppUser));
+      setUsers(appUsers);
+    }, (err) => {
+      console.error(">>> fetchUsers FAILED:", err);
+    });
 
     // Real-time Data Listener for Live Stream
     const streamDocRef = doc(db, 'liveStream', 'current');
@@ -181,7 +140,7 @@ export default function Admin() {
     const pastSeminarsQ = query(collection(db, 'pastSeminars'));
     const unsubscribePastSeminars = onSnapshot(pastSeminarsQ, (snapshot) => {
       const seminars = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PastSeminar));
-      // Sort in-memory
+      // Sort in-memory to prevent missing documents that lack createdAt
       seminars.sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -193,23 +152,18 @@ export default function Admin() {
     });
 
     return () => {
+      unsubscribeSubs();
+      unsubscribeUsers();
       unsubscribeStream();
       unsubscribePastSeminars();
     };
   }, [user, authLoading, navigate, isAdmin]);
 
-
-  const handleAssignRoleSubmit = (e: React.FormEvent) => {
+  const assignRoleByEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newRoleEmail) return;
-    setConfirmAssignRole(true);
-  };
-
-  const executeAssignRole = async () => {
     if (!newRoleEmail) return;
     
     setIsAssigning(true);
-    setConfirmAssignRole(false);
     try {
       // 1. Find user by email
       const usersRef = collection(db, 'users');
@@ -276,6 +230,11 @@ export default function Admin() {
   };
 
   const revokeRole = async (userId: string, userEmail: string) => {
+    if (userEmail.toLowerCase() === 'njeirheinard21@gmail.com' || userEmail.toLowerCase() === 'obenmaxjr@gmail.com') {
+      alert("Cannot revoke roles from primary administrators.");
+      return;
+    }
+
     if (!window.confirm(`Are you sure you want to revoke admin privileges from ${userEmail}?`)) return;
 
     try {
@@ -291,7 +250,7 @@ export default function Admin() {
 
   const generateKey = (planType: 'weekly' | 'monthly' | 'yearly') => {
     const prefix = planType === 'weekly' ? 'WK' : planType === 'monthly' ? 'OPT' : 'HLT';
-    const random = crypto.randomUUID().split('-')[0].toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     return `${prefix}-${random}`;
   };
 
@@ -475,9 +434,9 @@ export default function Admin() {
   };
 
   const handleDeletePastSeminar = async (id: string) => {
+    // Removed window.confirm because it is often blocked in iframes
     try {
       await deleteDoc(doc(db, 'pastSeminars', id));
-      setDeletingPastSeminarId(null);
     } catch (err: unknown) {
       console.error(err);
       handleFirestoreError(err, OperationType.DELETE, 'pastSeminars');
@@ -1121,16 +1080,6 @@ export default function Admin() {
                     ))
                   )}
                 </div>
-                {hasMoreSubs && filteredSubs.length > 0 && filter === 'all' && (
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      onClick={() => loadSubscriptions(true)}
-                      className="bg-white border border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm text-sm"
-                    >
-                      Load More
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </>
@@ -1142,7 +1091,7 @@ export default function Admin() {
                 <UserPlus className="h-5 w-5 text-[#059669]" />
                 Assign New Role
               </h2>
-              <form onSubmit={handleAssignRoleSubmit} className="flex flex-col sm:flex-row gap-4">
+              <form onSubmit={assignRoleByEmail} className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-grow">
                   <input
                     type="email"
@@ -1163,32 +1112,13 @@ export default function Admin() {
                     <option value="admin">Admin</option>
                   </select>
                 </div>
-                {confirmAssignRole ? (
-                  <div className="flex flex-col gap-1 items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={executeAssignRole}
-                      className="bg-red-600 text-white px-4 py-1 rounded-lg text-xs font-bold hover:bg-red-700 w-full"
-                    >
-                      Confirm Assign
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmAssignRole(false)}
-                      className="text-gray-500 text-xs hover:underline w-full"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isAssigning}
-                    className="bg-[#059669] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#047857] transition-all shadow-sm disabled:opacity-50"
-                  >
-                    {isAssigning ? 'Assigning...' : 'Assign Role'}
-                  </button>
-                )}
+                <button
+                  type="submit"
+                  disabled={isAssigning}
+                  className="bg-[#059669] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#047857] transition-all shadow-sm disabled:opacity-50"
+                >
+                  {isAssigning ? 'Assigning...' : 'Assign Role'}
+                </button>
               </form>
               <p className="text-xs text-gray-500 mt-3">
                 Note: Users must have an existing account before you can assign them a role.
@@ -1282,17 +1212,6 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
-              
-              {hasMoreUsers && users.length > 0 && (
-                <div className="px-5 sm:px-6 py-4 border-t border-gray-50 flex justify-center">
-                  <button
-                    onClick={() => loadUsers(true)}
-                    className="bg-white border border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-sm text-sm"
-                  >
-                    Load More
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         ) : activeTab === 'streaming' ? (
@@ -1575,33 +1494,14 @@ export default function Admin() {
                       >
                         Save
                       </button>
-                      {deletingPastSeminarId === seminar.id ? (
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePastSeminar(seminar.id)}
-                            className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors"
-                          >
-                            Confirm Delete
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeletingPastSeminarId(null)}
-                            className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-sm hover:bg-gray-200 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setDeletingPastSeminarId(seminar.id)}
-                          className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors"
-                          title="Delete Seminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePastSeminar(seminar.id)}
+                        className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-100 transition-colors"
+                        title="Delete Seminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
 
                     <div className="grid grid-rows-auto gap-4 mt-12 sm:mt-2">

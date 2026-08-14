@@ -99,33 +99,6 @@ exports.dailyMaintenance = functions.pubsub.schedule('every 24 hours').onRun(asy
   console.log(`Maintenance completed. Expired ${expiredCount} subscriptions and ${expiredKeys.size} keys.`);
 });
 
-exports.syncSubscriptionClaims = functions.firestore
-  .document('subscriptions/{subId}')
-  .onWrite(async (change, context) => {
-    const userId = change.after.exists ? change.after.data().userId : change.before.data().userId;
-    if (!userId) return null;
-
-    const activeSubs = await db.collection('subscriptions')
-      .where('userId', '==', userId)
-      .where('status', '==', 'active')
-      .get();
-    
-    const hasActiveSubscription = !activeSubs.empty;
-
-    try {
-      const userRecord = await admin.auth().getUser(userId);
-      const currentClaims = userRecord.customClaims || {};
-      
-      if (currentClaims.hasActiveSubscription !== hasActiveSubscription) {
-        currentClaims.hasActiveSubscription = hasActiveSubscription;
-        await admin.auth().setCustomUserClaims(userId, currentClaims);
-        console.log(`Updated custom claims for user ${userId}: hasActiveSubscription=${hasActiveSubscription}`);
-      }
-    } catch (error) {
-      console.error('Error setting custom claims:', error);
-    }
-  });
-
 // Scheduled Function: Every 30 days for data cleanup
 exports.monthlyMaintenance = functions.pubsub.schedule('0 0 1 * *').onRun(async (context) => {
   console.log("Running monthly maintenance (Cleanup expired data, retry failed emails).");

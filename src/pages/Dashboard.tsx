@@ -8,7 +8,7 @@ import { LogOut, PlayCircle, CreditCard, AlertTriangle, CheckCircle, Edit2, Tras
 import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
-  const { user, subscription, loading, isAdmin, logout, setUser } = useAuth();
+  const { user, subscription, loading, logout, setUser } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -107,7 +107,7 @@ export default function Dashboard() {
     }
   };
 
-  const isActive = subscription?.status === 'active' || isAdmin;
+  const isActive = subscription?.status === 'active' || user.email?.toLowerCase() === 'njeirheinard21@gmail.com';
   const isExpired = subscription?.status === 'expired';
 
   return (

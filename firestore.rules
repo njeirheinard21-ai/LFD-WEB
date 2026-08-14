@@ -14,8 +14,12 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-             (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+             (
+               (request.auth.token.get('email', '').lower() == "njeirheinard21@gmail.com") || 
+               (request.auth.token.get('email', '').lower() == "obenmaxjr@gmail.com") ||
+               (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+                get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+             );
     }
 
     function isValidUser(data) {
@@ -60,18 +64,18 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin()) && isValidSubscription(request.resource.data);
       allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidSubscription(request.resource.data);
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() && (request.auth.token.get('email', '').lower() == "njeirheinard21@gmail.com" || isAdmin());
     }
 
     match /activationKeys/{keyId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if isAdmin() && isValidActivationKey(request.resource.data);
       allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidActivationKey(request.resource.data);
-      allow delete: if isAdmin();
+      allow delete: if isAuthenticated() && (request.auth.token.get('email', '').lower() == "njeirheinard21@gmail.com" || isAdmin());
     }
 
     match /liveStream/{docId} {
-      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.hasActiveSubscription == true);
+      allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
 
@@ -107,8 +111,8 @@ service cloud.firestore {
     }
 
     match /seminarMessages/{messageId} {
-      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.hasActiveSubscription == true);
-      allow create: if (isAdmin() || (isAuthenticated() && request.auth.token.hasActiveSubscription == true)) && request.resource.data.userId == request.auth.uid && isValidSeminarMessage(request.resource.data);
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSeminarMessage(request.resource.data);
       allow update: if false;
       allow delete: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
     }

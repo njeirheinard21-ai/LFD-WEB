@@ -23,6 +23,7 @@ const Contact = React.lazy(() => import('./pages/Contact'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Register = React.lazy(() => import('./pages/Register'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Checkout = React.lazy(() => import('./pages/Checkout'));
 
 const LoadingFallback = () => (
   <div className="flex justify-center items-center h-screen w-full">
@@ -51,6 +52,7 @@ export default function App() {
                 <Route path="login" element={<Login />} />
                 <Route path="register" element={<Register />} />
                 <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               </Route>
             </Routes>
           </Suspense>

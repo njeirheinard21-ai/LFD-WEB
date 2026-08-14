@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, User, CheckCircle, Star, ChevronDown, ChevronUp, Shield, Award, Lock, PlayCircle, X, Smartphone, VideoOff, Radio, AlertCircle, ArrowRight, Maximize, Minimize, Banknote, Smile } from 'lucide-react';
 const LazyEmojiPicker = React.lazy(() => import('emoji-picker-react'));
-import { Theme } from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { addDoc, collection, query, where, getDocs, updateDoc, doc, onSnapshot } from 'firebase/firestore';
@@ -47,7 +46,7 @@ interface SeminarMessage {
 
 export default function Seminars() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { user, subscription, loading, isAdmin, refreshSubscription } = useAuth();
+  const { user, subscription, loading, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -140,8 +139,6 @@ export default function Seminars() {
     }
   };
 
-  const hasAccess = user && (subscription?.status === 'active' || isAdmin);
-
   useEffect(() => {
     resetControlsTimeout();
     return () => {
@@ -149,7 +146,7 @@ export default function Seminars() {
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [hasAccess]);
+  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -194,20 +191,17 @@ export default function Seminars() {
   }, []);
 
   useEffect(() => {
-    // Only fetch live stream if the user has access
-    let unsubscribeStream = () => {};
-    if (hasAccess) {
-      const streamDocRef = doc(db, 'liveStream', 'current');
-      unsubscribeStream = onSnapshot(streamDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          setLiveStream(docSnap.data() as LiveStream);
-        } else {
-          setLiveStream(null);
-        }
-      }, (err) => {
-        console.error(">>> fetchLiveStream FAILED:", err);
-      });
-    }
+    // Real-time Data Listener for Live Stream
+    const streamDocRef = doc(db, 'liveStream', 'current');
+    const unsubscribeStream = onSnapshot(streamDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setLiveStream(docSnap.data() as LiveStream);
+      } else {
+        setLiveStream(null);
+      }
+    }, (err) => {
+      console.error(">>> fetchLiveStream FAILED:", err);
+    });
 
     // Fetch Past Seminars once, cache if possible
     const fetchPastSeminars = async () => {
@@ -230,7 +224,7 @@ export default function Seminars() {
     return () => {
       unsubscribeStream();
     };
-  }, [hasAccess]);
+  }, []);
 
   const getYouTubeId = (url: string) => {
     if (!url) return null;
@@ -416,6 +410,8 @@ export default function Seminars() {
       </div>
     );
   }
+
+  const hasAccess = user && (subscription?.status === 'active' || user.email?.toLowerCase() === 'njeirheinard21@gmail.com');
 
   return (
     <div className="bg-white relative">
@@ -818,7 +814,7 @@ export default function Seminars() {
                                     }>
                                       <LazyEmojiPicker 
                                         onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
-                                        theme={Theme.LIGHT} 
+                                        theme="light" 
                                         lazyLoadEmojis={true}
                                       />
                                     </Suspense>

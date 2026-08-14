@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 export function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -13,6 +13,13 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
+  // Define logic for what makes an admin
+  // 1. Role is exactly 'admin'
+  // 2. Or explicit email override
+  const isAdmin = user?.role === 'admin' || 
+                  user?.email?.toLowerCase() === 'njeirheinard21@gmail.com' || 
+                  user?.email?.toLowerCase() === 'obenmaxjr@gmail.com';
 
   if (!user || !isAdmin) {
     // If not logged in, go to admin-login

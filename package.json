@@ -10,9 +10,6 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
-  "overrides": {
-    "node-domexception": "file:./mocks/node-domexception"
-  },
   "dependencies": {
     "@google/genai": "^1.29.0",
     "@tailwindcss/vite": "^4.1.14",
@@ -46,5 +43,8 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "overrides": {
+    "node-domexception": "file:./mocks/node-domexception"
   }
 }

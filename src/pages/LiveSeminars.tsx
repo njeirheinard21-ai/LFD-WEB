@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlayCircle, Lock, AlertCircle, ShieldCheck, ArrowRight, VideoOff, Radio, Maximize, Minimize, X, Smile } from 'lucide-react';
 const LazyEmojiPicker = React.lazy(() => import('emoji-picker-react'));
-import { Theme } from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../components/AuthContext';
 import { collection, query, where, getDocs, doc, onSnapshot, addDoc } from 'firebase/firestore';
@@ -31,7 +30,7 @@ interface SeminarMessage {
 }
 
 export default function LiveSeminars() {
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [liveStream, setLiveStream] = useState<LiveStream | null>(null);
@@ -137,9 +136,7 @@ export default function LiveSeminars() {
   }, []);
 
   useEffect(() => {
-    // Only fetch if hasAccess
-    if (!hasAccess) return;
-    
+    // Real-time Data Listener for Live Stream
     const streamDocRef = doc(db, 'liveStream', 'current');
     const unsubscribeStream = onSnapshot(streamDocRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -152,7 +149,7 @@ export default function LiveSeminars() {
     });
 
     return () => unsubscribeStream();
-  }, [hasAccess]);
+  }, []);
 
   useEffect(() => {
     if (liveStream?.isLive && liveStream.startedAt) {
@@ -206,8 +203,8 @@ export default function LiveSeminars() {
         return;
       }
 
-      // Admin bypass
-      if (isAdmin) {
+      // Admin bypass: njeirheinard21@gmail.com gets direct access
+      if (user.email?.toLowerCase() === 'njeirheinard21@gmail.com') {
         setHasAccess(true);
         setLoading(false);
         return;
@@ -499,7 +496,7 @@ export default function LiveSeminars() {
                               }>
                                 <LazyEmojiPicker 
                                   onEmojiClick={(emojiData) => setNewMessage(prev => prev + emojiData.emoji)} 
-                                  theme={Theme.LIGHT} 
+                                  theme="light" 
                                   lazyLoadEmojis={true}
                                 />
                               </Suspense>

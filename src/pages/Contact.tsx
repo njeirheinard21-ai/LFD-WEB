@@ -1,12 +1,11 @@
 import { useState, FormEvent } from 'react';
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle2, AlertCircle, MessageCircle } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SEO } from '../components/SEO';
 
 export default function Contact() {
   const { t } = useTranslation();
   const [submitted, setSubmitted] = useState(false);
-  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -27,13 +26,9 @@ export default function Contact() {
     const text = `[Name: ${formData.name},\nEmail: ${formData.email},\nPhone: ${formData.phone},\nLocation: ${formData.location},\nSubject: ${formData.subject},\nMessage: ${formData.message}]`;
     
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
-    const newWindow = window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, '_blank');
     
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      setFallbackUrl(whatsappUrl);
-    } else {
-      setSubmitted(true);
-    }
+    setSubmitted(true);
   };
 
   return (
@@ -114,32 +109,7 @@ export default function Contact() {
           {/* Contact Form & Map */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-              {fallbackUrl ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <AlertCircle className="h-10 w-10 text-amber-600" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('contact.popup_blocked', 'Popup Blocked')}</h3>
-                  <p className="text-gray-600 mb-6">{t('contact.popup_blocked_desc', 'We tried to open WhatsApp but it was blocked by your browser.')}</p>
-                  <a 
-                    href={fallbackUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-8 py-4 rounded-xl font-medium hover:bg-[#128C7E] transition-colors mb-4"
-                    onClick={() => { setFallbackUrl(null); setSubmitted(true); }}
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    {t('contact.click_here_whatsapp', 'Click here to send via WhatsApp')}
-                  </a>
-                  <br />
-                  <button 
-                    onClick={() => setFallbackUrl(null)}
-                    className="text-gray-500 hover:text-gray-700 underline text-sm"
-                  >
-                    {t('contact.go_back', 'Go back')}
-                  </button>
-                </div>
-              ) : submitted ? (
+              {submitted ? (
                 <div className="text-center py-12">
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle2 className="h-10 w-10 text-emerald-600" />
